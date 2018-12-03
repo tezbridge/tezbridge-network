@@ -1,0 +1,25 @@
+{
+  "name": "tzclient",
+  "version": "1.0.0",
+  "description": "The Tezos client library for TezBridge in JavaScript",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "parcel watch src/index.js",
+    "build": "rm -rf dist && rm -rf .cache && flow && parcel build src/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tezbridge/tzclient.git"
+  },
+  "author": "catsigma",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tezbridge/tzclient/issues"
+  },
+  "homepage": "https://github.com/tezbridge/tzclient",
+  "devDependencies": {
+    "@babel/core": "^7.1.6",
+    "@babel/preset-flow": "^7.0.0",
+    "flow-bin": "^0.86.0"
+  }
+}
