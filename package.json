@@ -1,25 +1,28 @@
 {
-  "name": "tzclient",
+  "name": "tezbridge-network",
   "version": "1.0.0",
-  "description": "The Tezos client library for TezBridge in JavaScript",
+  "description": "The TezBridge network library for Tezos blockchain in JavaScript with Flow type system",
   "main": "dist/index.js",
   "scripts": {
+    "flow": "flow",
     "dev": "parcel watch src/index.js",
+    "test": "flow && parcel build test/index.js --target node -o test.js && node dist/test.js",
     "build": "rm -rf dist && rm -rf .cache && flow && parcel build src/index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/tezbridge/tzclient.git"
+    "url": "git+https://github.com/tezbridge/tezbridge-network.git"
   },
   "author": "catsigma",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/tezbridge/tzclient/issues"
+    "url": "https://github.com/tezbridge/tezbridge-network/issues"
   },
-  "homepage": "https://github.com/tezbridge/tzclient",
+  "homepage": "https://github.com/tezbridge/tezbridge-network",
   "devDependencies": {
     "@babel/core": "^7.1.6",
-    "@babel/preset-flow": "^7.0.0",
+    "@babel/plugin-proposal-class-properties": "^7.1.0",
+    "@babel/plugin-transform-flow-strip-types": "^7.1.6",
     "flow-bin": "^0.86.0"
   }
 }

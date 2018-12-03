@@ -1,1 +1,1 @@
-# tzclient
+# TezBridge Network client
