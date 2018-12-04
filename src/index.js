@@ -5,20 +5,20 @@ import type { JSONType, RPCFuncType } from './types'
 
 export class TezBridgeNetwork {
   host: string
-  RPCall: RPCFuncType | null
+  RPCFn: RPCFuncType | null
 
   constructor(params : {
     host: string, 
-    RPCall?: RPCFuncType
+    RPCFn?: RPCFuncType
   }) {
     if (!params.host)
       throw "Please set the host parameter"
 
     this.host = params.host
-    this.RPCall = params.RPCall || null
+    this.RPCFn = params.RPCFn || null
   }
 
-  static RPCall : RPCFuncType = (url, data, method) => {
+  static RPCFn : RPCFuncType = (url, data, method) => {
     return new Promise<JSONType>((resolve, reject) => {
       const req = new XMLHttpRequest()
       req.addEventListener('load', (pe: ProgressEvent) => {
@@ -38,11 +38,11 @@ export class TezBridgeNetwork {
   }
 
   get(url: string, data: JSONType) {
-    return (this.RPCall || TezBridgeNetwork.RPCall)(this.host + url, data, 'GET')
+    return (this.RPCFn || TezBridgeNetwork.RPCFn)(this.host + url, data, 'GET')
   }
 
   post(url: string, data: JSONType) {
-    return (this.RPCall || TezBridgeNetwork.RPCall)(this.host + url, data, 'POST')
+    return (this.RPCFn || TezBridgeNetwork.RPCFn)(this.host + url, data, 'POST')
   }
 }
 
