@@ -1,6 +1,5 @@
 // @flow
 
-import type { JSONType } from './../src/types'
 import TezBridgeNetwork from './../src/index'
 
 import _assert from 'assert'
@@ -12,8 +11,8 @@ const assert = (v, m) => {
   console.log('\x1b[32m%s\x1b[0m','PASS:', m)
 }
 
-const RPCFn = (raw_url: string, data: JSONType, method: 'POST' | 'GET') => {
-  return new Promise<JSONType>((resolve, reject) => {
+const RPCFn = (raw_url: string, data?: JSON, method: 'POST' | 'GET') => {
+  return new Promise<JSON>((resolve, reject) => {
     const parsed_url = url.parse(raw_url)
     const options = {
       hostname: parsed_url.hostname,
@@ -53,8 +52,12 @@ const network_client = new TezBridgeNetwork({
   RPCFn
 })
 
-network_client.get('/chains/main/blocks/head/')
-.then((result : any) => {
-  assert(result.header.level > 1, 'header level')
-})
+const main = async () => {
+  const r1: any = await network_client.fetch.head()
+  assert(r1.header.level > 1, 'head.header.level')
 
+  const r2: any = await network_client.fetch.head('header')
+  assert(r2.level > 1, 'header.level')
+}
+
+main()
