@@ -1,51 +1,8 @@
 // @flow
 
 import TezBridgeNetwork from './../src/index'
+import { RPCFn, assert } from './util'
 
-import _assert from 'assert'
-import https from 'https'
-import url from 'url'
-
-const assert = (v, m) => {
-  _assert.ok(v, m)
-  console.log('\x1b[32m%s\x1b[0m','PASS:', m)
-}
-
-const RPCFn = (raw_url: string, data?: JSON, method: 'POST' | 'GET') => {
-  return new Promise<JSON>((resolve, reject) => {
-    const parsed_url = url.parse(raw_url)
-    const options = {
-      hostname: parsed_url.hostname,
-      port: parsed_url.port,
-      path: parsed_url.path,
-      method,
-      headers: {
-        'Content-Type': 'application/json'
-      }
-    }
-
-    const req = https.request(options, (res) => {
-      let data = ''
-      res.on('data', (d) => {
-        data += d.toString()
-      })
-
-      res.on('end', () => {
-        resolve(JSON.parse(data))
-      })
-    })
-
-    req.on('error', (e) => {
-      reject(e)
-    })
-
-    if (method === 'POST') {
-      req.write(JSON.stringify(data))
-    }
-
-    req.end()
-  })
-}
 
 const network_client = new TezBridgeNetwork({
   host: 'https://alphanet.tezrpc.me',
@@ -53,11 +10,14 @@ const network_client = new TezBridgeNetwork({
 })
 
 const main = async () => {
-  const r1: any = await network_client.fetch.head()
+  const r1 : Object = await network_client.fetch.head()
   assert(r1.header.level > 1, 'head.header.level')
 
-  const r2: any = await network_client.fetch.head('header')
+  const r2 : Object = await network_client.fetch.header()
   assert(r2.level > 1, 'header.level')
+
+  const r3 : Object = await network_client.fetch.protocol()
+  assert(r3.length === 51 && r3[0] === 'P', 'head.header.protocol')
 }
 
 main()

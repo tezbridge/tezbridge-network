@@ -1,15 +1,15 @@
 // @flow
 
-import type { RPCFunc, ApiGetsFunc } from './types'
+import type { RPCFunc, TezJSON, ApiGetsFunc } from './types'
 import { gets } from './api'
 
 export class TezBridgeNetwork {
   host: string
   RPCFn: RPCFunc | null
-  fetch: {[string]: any => Promise<JSON>}
+  fetch: {[string]: any => Promise<TezJSON>}
 
   static RPCFn : RPCFunc = (url, data, method) => {
-    return new Promise<JSON>((resolve, reject) => {
+    return new Promise<TezJSON>((resolve, reject) => {
       const req = new XMLHttpRequest()
       req.addEventListener('load', (pe: ProgressEvent) => {
         if (req.status === 200)
@@ -40,20 +40,22 @@ export class TezBridgeNetwork {
     this.bindApi(gets)
   }
 
-  bindApi(gets: {[string]: ApiGetsFunc}) {
+  bindApi(gets : ApiGetsFunc) {
     this.fetch = {}
-    Object.keys(gets).forEach(key => {
+    const gets_closure = gets((url, data) => this.get.call(this, url, data))
+
+    Object.keys(gets_closure).forEach(key => {
       this.fetch[key] = (...args) => {
-        return this.get(gets[key].apply(null, args))
+        return gets_closure[key].apply(null, args)
       }
     })
   }
 
-  get(url: string, data?: JSON) {
+  get(url: string, data?: TezJSON) {
     return (this.RPCFn || TezBridgeNetwork.RPCFn)(this.host + url, data, 'GET')
   }
 
-  post(url: string, data: JSON) {
+  post(url: string, data: TezJSON) {
     return (this.RPCFn || TezBridgeNetwork.RPCFn)(this.host + url, data, 'POST')
   }
 
