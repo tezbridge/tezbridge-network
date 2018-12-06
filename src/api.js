@@ -1,6 +1,7 @@
 // @flow
 
 import type { GetRPCFunc, TezJSON, ApiGetsFunc } from './types'
+import { safeProp } from './types'
 
 export const gets : ApiGetsFunc = (fetch : GetRPCFunc) => {
   const mapping : {[string]: any => Promise<TezJSON>} = {
@@ -14,7 +15,7 @@ export const gets : ApiGetsFunc = (fetch : GetRPCFunc) => {
       return mapping.head('header')
     },
     protocol() {
-      return mapping.header().then(x => x instanceof Object && x.protocol)
+      return mapping.header().then(x => safeProp(x, 'protocol'))
     }
   }
 
