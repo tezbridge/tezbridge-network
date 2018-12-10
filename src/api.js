@@ -71,7 +71,33 @@ export class Posts {
 
   pack_data(data_json : TezJSON, type_json : TezJSON) {
     const param = {"data": data_json,"type":type_json, "gas": "400000"}
-    return this.submit(`/chains/main/blocks/head/helpers/scripts/pack_data`, param).then(x => safeProp(x, 'packed'))
+    return this.submit(`/chains/main/blocks/head/helpers/scripts/pack_data`, param)
+               .then(x => safeProp(x, 'packed'))
+  }
+
+  forge_operation(head_hash : string, ops : TezJSON) {
+    const param = {
+      branch: head_hash,
+      contents: ops
+    }
+    return this.submit(`/chains/main/blocks/head/helpers/forge/operations`, param)
+               .then(x => console.log(x))
+  }
+
+  preapply_operation(head_hash : string, ops : TezJSON, protocol : string, signature : string) {
+    const param = {
+      branch: head_hash,
+      contents: ops,
+      protocol,
+      signature
+    }
+    return this.submit(`/chains/main/blocks/head/helpers/preapply/operations`, [param])
+               .then(x => console.log(x))
+  }
+
+  inject_operation(signed_op : string) {
+    return this.submit('/injection/operation', signed_op)
+               .then(x => console.log(x))
   }
 }
 
