@@ -101,3 +101,50 @@ export class Posts {
   }
 }
 
+
+interface Key {
+  name : string,
+  secret_key : Uint8Array,
+  pub_key : Uint8Array,
+  address : string,
+  getSecretKey() : string,
+  getPublicKey() : string
+}
+
+export class Parameter {
+  key : Key
+
+  constructor(key : Key) {
+    if (!key)
+      throw 'Please input key in Parameter constructor'
+
+    this.key = key
+  }
+
+
+  reveal() {
+    return {
+      kind: "reveal",
+      source: this.key.address,
+      fee: "1300",
+      gas_limit: "10000",
+      storage_limit: "0",
+      public_key: this.key.getPublicKey()
+      // counter: $positive_bignum,
+    }
+  }
+
+  transaction() {
+    return {
+      kind: 'transaction',
+      source: this.key.address,
+      fee: "400000",
+      gas_limit: "400000",
+      storage_limit: "60000",
+      amount: "0"
+      // counter: $positive_bignum,
+      // destination: $contract_id,
+      // parameters?: $micheline.michelson_v1.expression
+    }
+  }
+}
