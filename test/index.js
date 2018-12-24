@@ -6,7 +6,7 @@ import { Gets } from './../src/api'
 import { RPCFn, assert } from './util'
 
 const network_client = new TezBridgeNetwork({
-  host: 'https://alphanet.tezrpc.me',
+  host: 'https://testnet.tezbridge.com',
   RPCFn
 })
 
@@ -44,22 +44,22 @@ const gets_tests = async () => {
   }
 
   {
-    const r : Object = await network_client.fetch.contract('KT1Ap4UZRBGGo9Pm92sFbR8gJrrFTfUbX4kc')
+    const r : Object = await network_client.fetch.contract('KT1T8u994jypfZK68QGAR7rdKRzFHFTXsRDM')
     assert(r.script && r.manager && r.balance, 'FETCH: contract')
   }
 
   {
-    const r : Object = await network_client.fetch.balance('tz1TUswtLE1cTBgoBC2JAtQ5Jsz2crp1tZvJ')
+    const r : Object = await network_client.fetch.balance('tz1MJhE5bHTnwSsvZL8AQaXdriN1me16UtpG')
     assert(parseInt(r) > 1, 'FETCH: contract.balance')
   }
 
   {
-    const r : Object = await network_client.fetch.manager_key('KT1Ap4UZRBGGo9Pm92sFbR8gJrrFTfUbX4kc')
-    assert(r === 'tz1gRaTpXdZPEdcoG85gG9EuUYNeRKuTUoz4', 'FETCH: contract.manager')
+    const r : Object = await network_client.fetch.manager_key('KT1T8u994jypfZK68QGAR7rdKRzFHFTXsRDM')
+    assert(r === 'tz1aFrpsJ63J4psy4VDQjZork4uW9JuZiY9i', 'FETCH: contract.manager')
   }
 
   {
-    const r : Object = await network_client.fetch.counter('tz1TUswtLE1cTBgoBC2JAtQ5Jsz2crp1tZvJ')
+    const r : Object = await network_client.fetch.counter('tz1aFrpsJ63J4psy4VDQjZork4uW9JuZiY9i')
     assert(parseInt(r) > 1, 'FETCH: contract.counter')
   }
 
@@ -69,18 +69,18 @@ const gets_tests = async () => {
   }
 
   {
-    const r : Object = await network_client.fetch.contract_bytes('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
+    const r : Object = await network_client.fetch.contract_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
     assert(r.balance && r.data && r.used_bytes && r.len && r.manager, 'FETCH: raw contract in bytes')
   }
 
   {
-    const r : Object = await network_client.fetch.storage_bytes('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
+    const r : Object = await network_client.fetch.storage_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
     const storage_len = parseInt(r.slice(0, 8), 16)
     assert(r.length === 8 + storage_len * 2, 'FETCH: raw storage of contract in bytes')
   }
 
   {
-    const r : Object = await network_client.fetch.big_map_bytes('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
+    const r : Object = await network_client.fetch.big_map_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
     assert(Object.keys(r).reduce((acc, x) => acc && (x.length === 2 ? true : false), true), 'FETCH: raw big_map of contract in bytes')
   }
 }
