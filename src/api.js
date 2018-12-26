@@ -2,6 +2,8 @@
 
 import type { GetRPCFunc, PostRPCFunc, TezJSON } from './types'
 import { safeProp } from './types'
+import { checkProps, OpStep } from './util'
+
 
 export class Gets {
   fetch : GetRPCFunc
@@ -102,49 +104,42 @@ export class Posts {
 }
 
 
-interface Key {
-  name : string,
-  secret_key : Uint8Array,
-  pub_key : Uint8Array,
-  address : string,
-  getSecretKey() : string,
-  getPublicKey() : string
-}
-
-export class Parameter {
-  key : Key
-
-  constructor(key : Key) {
-    if (!key)
-      throw 'Please input key in Parameter constructor'
-
-    this.key = key
+export class Mixed {
+  fetch: Gets
+  submit: Posts
+  constructor(fetch: Gets, submit: Posts) {
+    this.fetch = fetch
+    this.submit = submit
   }
 
+  async originate(param: {
+    key_hash : string
+  }) {
+    const counter = await this.fetch.counter(param.key_hash)
 
-  reveal() {
-    return {
-      kind: "reveal",
-      source: this.key.address,
-      fee: "1300",
-      gas_limit: "10000",
-      storage_limit: "0",
-      public_key: this.key.getPublicKey()
-      // counter: $positive_bignum,
-    }
-  }
-
-  transaction() {
-    return {
-      kind: 'transaction',
-      source: this.key.address,
+    const submit_param = Object.assign({}, {
+      kind: "origination",
+      // source: this.key_pair.public_key_hash,
       fee: "400000",
+      // counter: $positive_bignum,
       gas_limit: "400000",
       storage_limit: "60000",
-      amount: "0"
-      // counter: $positive_bignum,
-      // destination: $contract_id,
-      // parameters?: $micheline.michelson_v1.expression
-    }
+      // managerPubkey: this.key_pair.public_key_hash,
+      balance: "0",
+      // "spendable"?: boolean,
+      // "delegatable"?: boolean,
+      // "delegate"?: $Signature.Public_key_hash,
+      // "script"?: $scripted.contracts
+    }, {
+      counter,
+      managerPubkey: param.key_hash
+    })
+
+    const head = await this.fetch.head()
+
+    if (!(typeof head === 'string'))
+      throw `Error type for head result: ${head.toString()}`
+
+    const forget_result = await this.submit.forge_operation(head, [submit_param])
   }
 }

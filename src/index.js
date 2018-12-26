@@ -1,13 +1,14 @@
 // @flow
 
 import type { RPCFunc, TezJSON } from './types'
-import { Gets, Posts } from './api'
+import { Gets, Posts, Mixed } from './api'
 
 export class TezBridgeNetwork {
   host: string
   RPCFn: RPCFunc | null
   fetch: Gets
   submit: Posts
+  mixed: Mixed
 
   static RPCFn : RPCFunc = (url, data, method) => {
     return new Promise<TezJSON>((resolve, reject) => {
@@ -40,6 +41,8 @@ export class TezBridgeNetwork {
 
     this.fetch = new Gets((url, data) => this.get.call(this, url, data))
     this.submit = new Posts((url, data) => this.post.call(this, url, data))
+
+    this.mixed = new Mixed(this.fetch, this.submit)
   }
 
 
@@ -50,7 +53,6 @@ export class TezBridgeNetwork {
   post(url: string, data: TezJSON) {
     return (this.RPCFn || TezBridgeNetwork.RPCFn)(this.host + url, data, 'POST')
   }
-
 }
 
 export default TezBridgeNetwork
