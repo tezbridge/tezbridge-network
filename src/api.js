@@ -56,7 +56,6 @@ export class Gets {
   }
   manager_key(address : string) {
     return this.fetch(`/chains/main/blocks/head/context/contracts/${address}/manager_key`)
-           .then(x => safeProp(x, 'manager'))
   }
   counter(address : string) {
     return this.fetch(`/chains/main/blocks/head/context/contracts/${address}/counter`)
@@ -83,7 +82,6 @@ export class Posts {
       contents: ops
     }
     return this.submit(`/chains/main/blocks/head/helpers/forge/operations`, param)
-               .then(x => console.log(x))
   }
 
   preapply_operation(head_hash : string, ops : TezJSON, protocol : string, signature : string) {
@@ -107,39 +105,109 @@ export class Posts {
 export class Mixed {
   fetch: Gets
   submit: Posts
+
   constructor(fetch: Gets, submit: Posts) {
     this.fetch = fetch
     this.submit = submit
   }
 
-  async originate(param: {
-    key_hash : string
-  }) {
-    const counter = await this.fetch.counter(param.key_hash)
+  static params = {
+    reveal(source: string, public_key: string, counter: string) {
+      return {
+        kind: 'reveal',
+        source,
+        fee: '1300',
+        gas_limit: '10000',
+        storage_limit: '0',
+        public_key,
+        counter
+      }
+    },
+    transaction(source: string, destination: string, counter: string) {
+      return {
+        kind: 'transaction',
+        source,
+        fee: '400000',
+        gas_limit: '400000',
+        storage_limit: '60000',
+        amount: '0',
+        counter,
+        destination,
+        // parameters?: $micheline.michelson_v1.expression
+      }
+    },
+    origination(source: string, manager_key: string, counter: string) {
+      return {
+        kind: 'origination',
+        source,
+        fee: '400000',
+        counter,
+        gas_limit: '400000',
+        storage_limit: '60000',
+        managerPubkey: manager_key,
+        balance: '0',
+        // "spendable"?: boolean,
+        // "delegatable"?: boolean,
+        // "delegate"?: $Signature.Public_key_hash,
+        // "script"?: $scripted.contracts
+      }
+    }
+  }
 
-    const submit_param = Object.assign({}, {
-      kind: "origination",
-      // source: this.key_pair.public_key_hash,
-      fee: "400000",
-      // counter: $positive_bignum,
-      gas_limit: "400000",
-      storage_limit: "60000",
-      // managerPubkey: this.key_pair.public_key_hash,
-      balance: "0",
-      // "spendable"?: boolean,
-      // "delegatable"?: boolean,
-      // "delegate"?: $Signature.Public_key_hash,
-      // "script"?: $scripted.contracts
-    }, {
-      counter,
-      managerPubkey: param.key_hash
-    })
+  async makeOperation(t: string, param: {
+    source : string,
+    public_key: string
+  }, op_param: Object) {
+    const ops = []
+    const counter = await this.fetch.counter(param.source)
+    const manager_key = await this.fetch.manager_key(param.source)
 
-    const head = await this.fetch.head()
+    if (typeof counter !== 'string')
+      throw 'Invalid counter'
 
-    if (!(typeof head === 'string'))
-      throw `Error type for head result: ${head.toString()}`
+    if (!safeProp(manager_key, 'key')) {
+      ops.push(Mixed.params.reveal(param.source, param.public_key, counter))
+    }
 
-    const forget_result = await this.submit.forge_operation(head, [submit_param])
+    const manager_pkh = safeProp(manager_key, 'manager')
+    if (typeof manager_pkh !== 'string')
+      throw 'Invalid manager public key hash'
+
+    const op = {
+      origination: Object.assign(
+        Mixed.params.origination(param.source, manager_pkh, counter),
+        op_param
+      )
+    }[t]
+
+    if (!op)
+      throw `Invalid t(${t}) in makeOperation`
+
+    ops.push(op)
+
+    const head_hash = await this.fetch.hash()
+
+    if (!(typeof head_hash === 'string'))
+      throw `Error type for head_hash result: ${head_hash.toString()}`
+
+    const operation_hex = await this.submit.forge_operation(head_hash, ops)
+    const protocol = await this.fetch.protocol()
+
+    return {
+      protocol,
+      operation_hex,
+      branch: head_hash,
+      contents: ops
+    }
+  }
+
+  async originate(basic : {
+    source : string,
+    public_key: string
+  }, op_param : Object) {
+    return this.makeOperation('origination', {
+      source: basic.source,
+      public_key: basic.public_key
+    }, op_param)
   }
 }

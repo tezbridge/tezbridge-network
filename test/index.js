@@ -55,7 +55,7 @@ const gets_tests = async () => {
 
   {
     const r : Object = await network_client.fetch.manager_key('KT1T8u994jypfZK68QGAR7rdKRzFHFTXsRDM')
-    assert(r === 'tz1aFrpsJ63J4psy4VDQjZork4uW9JuZiY9i', 'FETCH: contract.manager')
+    assert(r.manager === 'tz1aFrpsJ63J4psy4VDQjZork4uW9JuZiY9i', 'FETCH: contract.manager')
   }
 
   {
@@ -95,10 +95,29 @@ const posts_tests = async () => {
   }
 }
 
+const mixed_tests = async () => {
+  {
+    const r : Object = await network_client.mixed.originate({
+      source: 'tz1hgWvYdzLECdrq5zndGHwCGnUCJq1KFe3r',
+      public_key: 'edpkunm1aRnRtHwVsBGSFgKmw5EhBn4gR6NC5JqVoAi57viSgAN3t5'
+    }, {
+      spendable: false,
+      delegatable: false,
+      script: {
+        code: [{"prim":"parameter","args":[{"prim":"contract","args":[{"prim":"unit"}],"annots":[":X"]}]},{"prim":"storage","args":[{"prim":"unit"}]},{"prim":"code","args":[[{"prim":"CDR","annots":["@storage_slash_1"]},{"prim":"NIL","args":[{"prim":"operation"}]},{"prim":"PAIR"}]]}],
+        storage: {"prim":"Pair","args":[[],{"prim":"Unit"}]}
+      }
+    })
+
+    assert(r.operation_hex.length > 4, 'MIXED: origination')
+  }
+}
+
 const main = async () => {
   await fn_tests()
   await gets_tests()
   await posts_tests()
+  await mixed_tests()
 }
 
 main()
