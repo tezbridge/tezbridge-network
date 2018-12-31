@@ -97,7 +97,7 @@ const posts_tests = async () => {
 
 const mixed_tests = async () => {
   {
-    const r : Object = await network_client.mixed.originate({
+    const r : Object = await network_client.mixed.makeOriginationBytes({
       source: 'tz1hgWvYdzLECdrq5zndGHwCGnUCJq1KFe3r',
       public_key: 'edpkunm1aRnRtHwVsBGSFgKmw5EhBn4gR6NC5JqVoAi57viSgAN3t5'
     }, {
@@ -109,7 +109,20 @@ const mixed_tests = async () => {
       }
     })
 
-    assert(r.operation_hex.length > 4, 'MIXED: origination')
+    assert(r.operation_hex.length > 4, 'MIXED: makeOriginationBytes')
+  }
+
+  {
+    const r : Object = await network_client.mixed.makeTransactionBytes({
+      source: 'tz1hgWvYdzLECdrq5zndGHwCGnUCJq1KFe3r',
+      public_key: 'edpkunm1aRnRtHwVsBGSFgKmw5EhBn4gR6NC5JqVoAi57viSgAN3t5'
+    }, {
+      amount: '1',
+      destination: 'tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5',
+      parameters: {"prim":"Unit"}
+    })
+
+    assert(r.operation_hex.length > 4, 'MIXED: makeTransactionBytes')
   }
 }
 

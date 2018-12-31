@@ -154,7 +154,7 @@ export class Mixed {
     }
   }
 
-  async makeOperation(t: string, param: {
+  async makeOperationBytes(t: 'origination' | 'transaction', param: {
     source : string,
     public_key: string
   }, op_param: Object) {
@@ -177,11 +177,14 @@ export class Mixed {
       origination: Object.assign(
         Mixed.params.origination(param.source, manager_pkh, counter),
         op_param
+      ),
+      transaction: Object.assign(
+        Mixed.params.transaction(param.source, op_param.destination, counter)
       )
     }[t]
 
     if (!op)
-      throw `Invalid t(${t}) in makeOperation`
+      throw `Invalid t(${t}) in makeOperationBytes`
 
     ops.push(op)
 
@@ -201,11 +204,21 @@ export class Mixed {
     }
   }
 
-  async originate(basic : {
+  async makeOriginationBytes(basic : {
     source : string,
     public_key: string
   }, op_param : Object) {
-    return this.makeOperation('origination', {
+    return this.makeOperationBytes('origination', {
+      source: basic.source,
+      public_key: basic.public_key
+    }, op_param)
+  }
+
+  async makeTransactionBytes(basic : {
+    source : string,
+    public_key: string
+  }, op_param : Object) {
+    return this.makeOperationBytes('transaction', {
       source: basic.source,
       public_key: basic.public_key
     }, op_param)
