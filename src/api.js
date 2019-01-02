@@ -92,12 +92,10 @@ export class Posts {
       signature
     }
     return this.submit(`/chains/main/blocks/head/helpers/preapply/operations`, [param])
-               .then(x => console.log(x))
   }
 
   inject_operation(signed_op : string) {
     return this.submit('/injection/operation', signed_op)
-               .then(x => console.log(x))
   }
 }
 
