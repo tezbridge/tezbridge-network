@@ -179,7 +179,8 @@ export class Mixed {
         op_param
       ),
       transaction: Object.assign(
-        Mixed.params.transaction(param.source, op_param.destination, counter)
+        Mixed.params.transaction(param.source, op_param.destination, counter),
+        op_param
       )
     }[t]
 
