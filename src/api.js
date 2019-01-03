@@ -157,11 +157,13 @@ export class Mixed {
     public_key: string
   }, op_param: Object) {
     const ops = []
-    const counter = await this.fetch.counter(param.source)
+    const counter_prev = await this.fetch.counter(param.source)
     const manager_key = await this.fetch.manager_key(param.source)
 
-    if (typeof counter !== 'string')
+    if (typeof counter_prev !== 'string')
       throw 'Invalid counter'
+
+    const counter = parseInt(counter_prev) + 1 + ''
 
     if (!safeProp(manager_key, 'key')) {
       ops.push(Mixed.params.reveal(param.source, param.public_key, counter))
