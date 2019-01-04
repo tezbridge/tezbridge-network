@@ -152,10 +152,13 @@ export class Mixed {
     }
   }
 
-  async makeOperationBytes(t: 'origination' | 'transaction', param: {
+  async makeOperationBytes(param: {
     source : string,
     public_key: string
-  }, op_param: Object) {
+  }, op_params: Array<{
+    kind: 'origination' | 'transaction',
+    param: Object
+  }>) {
     const ops = []
     const counter_prev = await this.fetch.counter(param.source)
     const manager_key = await this.fetch.manager_key(param.source)
@@ -163,31 +166,35 @@ export class Mixed {
     if (typeof counter_prev !== 'string')
       throw 'Invalid counter'
 
-    const counter = parseInt(counter_prev) + 1 + ''
+    let counter = parseInt(counter_prev) + 1 + ''
 
     if (!safeProp(manager_key, 'key')) {
       ops.push(Mixed.params.reveal(param.source, param.public_key, counter))
+      counter = parseInt(counter) + 1 + ''
     }
 
     const manager_pkh = safeProp(manager_key, 'manager')
     if (typeof manager_pkh !== 'string')
       throw 'Invalid manager public key hash'
 
-    const op = {
-      origination: Object.assign(
-        Mixed.params.origination(param.source, manager_pkh, counter),
-        op_param
-      ),
-      transaction: Object.assign(
-        Mixed.params.transaction(param.source, op_param.destination, counter),
-        op_param
-      )
-    }[t]
+    op_params.forEach(item => {
+      const op = {
+        origination: Object.assign(
+          Mixed.params.origination(param.source, manager_pkh, counter),
+          item.param
+        ),
+        transaction: Object.assign(
+          Mixed.params.transaction(param.source, item.param.destination, counter),
+          item.param
+        )
+      }[item.kind]
 
-    if (!op)
-      throw `Invalid t(${t}) in makeOperationBytes`
+      if (!op)
+        throw `Invalid t(${item.kind}) in makeOperationBytes`
 
-    ops.push(op)
+      ops.push(op)
+      counter = parseInt(counter) + 1 + ''
+    })
 
     const head_hash = await this.fetch.hash()
 
@@ -209,19 +216,25 @@ export class Mixed {
     source : string,
     public_key: string
   }, op_param : Object) {
-    return this.makeOperationBytes('origination', {
+    return this.makeOperationBytes({
       source: basic.source,
       public_key: basic.public_key
-    }, op_param)
+    }, [{
+      kind: 'origination',
+      param: op_param
+    }])
   }
 
   async makeTransactionBytes(basic : {
     source : string,
     public_key: string
   }, op_param : Object) {
-    return this.makeOperationBytes('transaction', {
+    return this.makeOperationBytes({
       source: basic.source,
       public_key: basic.public_key
-    }, op_param)
+    }, [{
+      kind: 'transaction',
+      param: op_param
+    }])
   }
 }
