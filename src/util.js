@@ -12,6 +12,16 @@ export function checkProps(obj : Object, ...props : Array<string>) {
   }
 }
 
+export function filterHashUrl(x : string) {
+  if (x.indexOf('/') === -1)
+    throw "The input hash_url should be in this format: `xx/xx/xx/xx/xx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`"
+
+  const start = x[0] === '/' ? 1 : 0
+  const end = x.slice(-1) === '/' ? -1 : x.length
+
+  return x.slice(start, end)
+}
+
 export class OpStep {
   main_fn: any => any
   next_nodes: Array<OpStep>

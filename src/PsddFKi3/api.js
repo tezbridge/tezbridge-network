@@ -1,21 +1,12 @@
 // @flow
 
-import type { GetRPCFunc, PostRPCFunc, TezJSON } from './types'
-import { safeProp } from './types'
-import { checkProps, OpStep } from './util'
+import type { GetRPCFunc, PostRPCFunc, TezJSON } from '../types'
+import { safeProp } from '../types'
+import { checkProps, filterHashUrl, OpStep } from '../util'
 
 
 export class Gets {
   fetch : GetRPCFunc
-  static filter_hash_url(x : string) {
-    if (x.indexOf('/') === -1)
-      throw "The input hash_url should be in this format: `xx/xx/xx/xx/xx/xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`"
-
-    const start = x[0] === '/' ? 1 : 0
-    const end = x.slice(-1) === '/' ? -1 : x.length
-
-    return x.slice(start, end)
-  }
 
   constructor(fetch : GetRPCFunc) {
     this.fetch = fetch
@@ -45,7 +36,7 @@ export class Gets {
     return this.fetch(`/chains/main/blocks/head/context/contracts/${address}`)
   }
   contract_bytes(hash_url : string, sub_path? : string) {
-    const hash = Gets.filter_hash_url(hash_url)
+    const hash = filterHashUrl(hash_url)
     return this.fetch(`/chains/main/blocks/head/context/raw/bytes/contracts/index/originated/${hash}${sub_path || ''}`)
   }
   storage_bytes(hash_url : string) {
@@ -238,3 +229,5 @@ export class Mixed {
     }])
   }
 }
+
+export default { Gets, Posts, Mixed }

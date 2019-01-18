@@ -1,7 +1,7 @@
 // @flow
 
 import TezBridgeNetwork from './../src/index'
-import { Gets } from './../src/api'
+import { filterHashUrl } from './../src/util'
 
 import { RPCFn, assert } from './util'
 
@@ -12,13 +12,13 @@ const network_client = new TezBridgeNetwork({
 
 const fn_tests = async () => {
   {
-    const r1 = Gets.filter_hash_url('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
-    const r2 = Gets.filter_hash_url('/3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
-    const r3 = Gets.filter_hash_url('/3e/e2/31/36/6b/1336eb61419df8fc666056025929bf/')
-    const r4 = Gets.filter_hash_url('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf/')
+    const r1 = filterHashUrl('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
+    const r2 = filterHashUrl('/3e/e2/31/36/6b/1336eb61419df8fc666056025929bf')
+    const r3 = filterHashUrl('/3e/e2/31/36/6b/1336eb61419df8fc666056025929bf/')
+    const r4 = filterHashUrl('3e/e2/31/36/6b/1336eb61419df8fc666056025929bf/')
     assert(
       r1 === r2 && r2 === r3 && r3 === r4 && r1 === '3e/e2/31/36/6b/1336eb61419df8fc666056025929bf', 
-      'FN: filter hash url')
+      'FN: filterHashUrl')
   }
 }
 
