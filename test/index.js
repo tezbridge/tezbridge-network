@@ -134,22 +134,18 @@ const mixed_tests = async () => {
     [
       {
         kind: 'origination',
-        param: {
-          spendable: false,
-          delegatable: false,
-          script: {
-            code: [{"prim":"parameter","args":[{"prim":"contract","args":[{"prim":"unit"}],"annots":[":X"]}]},{"prim":"storage","args":[{"prim":"unit"}]},{"prim":"code","args":[[{"prim":"CDR","annots":["@storage_slash_1"]},{"prim":"NIL","args":[{"prim":"operation"}]},{"prim":"PAIR"}]]}],
-            storage: {"prim":"Pair","args":[[],{"prim":"Unit"}]}
-          }
+        spendable: false,
+        delegatable: false,
+        script: {
+          code: [{"prim":"parameter","args":[{"prim":"contract","args":[{"prim":"unit"}],"annots":[":X"]}]},{"prim":"storage","args":[{"prim":"unit"}]},{"prim":"code","args":[[{"prim":"CDR","annots":["@storage_slash_1"]},{"prim":"NIL","args":[{"prim":"operation"}]},{"prim":"PAIR"}]]}],
+          storage: {"prim":"Pair","args":[[],{"prim":"Unit"}]}
         }
       },
       {
         kind: 'transaction',
-        param: {
-          amount: '1',
-          destination: 'tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5',
-          parameters: {"prim":"Unit"}
-        }
+        amount: '1',
+        destination: 'tz3WXYtyDUNL91qfiCJtVUX746QpNv5i5ve5',
+        parameters: {"prim":"Unit"}
       }
     ])
 

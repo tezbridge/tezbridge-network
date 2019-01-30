@@ -147,8 +147,8 @@ export class Mixed {
     source : string,
     public_key: string
   }, op_params: Array<{
-    kind: 'origination' | 'transaction',
-    param: Object
+    kind : 'origination' | 'transaction',
+    destination? : string
   }>) {
     const ops = []
     const counter_prev = await this.fetch.counter(param.source)
@@ -171,12 +171,14 @@ export class Mixed {
     op_params.forEach(item => {
       const op = {
         origination: Object.assign(
+          {},
           Mixed.params.origination(param.source, manager_pkh, counter),
-          item.param
+          item
         ),
         transaction: Object.assign(
-          Mixed.params.transaction(param.source, item.param.destination, counter),
-          item.param
+          {},
+          Mixed.params.transaction(param.source, item.destination || '', counter),
+          item
         )
       }[item.kind]
 
@@ -210,10 +212,9 @@ export class Mixed {
     return this.makeOperationBytes({
       source: basic.source,
       public_key: basic.public_key
-    }, [{
-      kind: 'origination',
-      param: op_param
-    }])
+    }, [Object.assign({
+      kind: 'origination'
+    }, op_param)])
   }
 
   async makeTransactionBytes(basic : {
@@ -223,10 +224,9 @@ export class Mixed {
     return this.makeOperationBytes({
       source: basic.source,
       public_key: basic.public_key
-    }, [{
-      kind: 'transaction',
-      param: op_param
-    }])
+    }, [Object.assign({
+      kind: 'transaction'
+    }, op_param)])
   }
 }
 
