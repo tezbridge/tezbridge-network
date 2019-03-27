@@ -3,11 +3,10 @@
 import TezBridgeNetwork from './../src/index'
 import { filterHashUrl } from './../src/util'
 
-import { RPCFn, assert } from './util'
+import { assert } from './util'
 
 const network_client = new TezBridgeNetwork({
-  host: 'https://testnet.tezbridge.com',
-  RPCFn
+  host: 'https://testnet.tezbridge.com'
 })
 
 const fn_tests = async () => {
