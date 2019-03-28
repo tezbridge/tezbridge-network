@@ -1,8 +1,6 @@
-sudo: false
 language: node_js
 node_js:
   - "lts/*"
 before_script:
   - npm install -g parcel-bundler
-  - npm install
 script: npm run build
