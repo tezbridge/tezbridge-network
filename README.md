@@ -14,7 +14,7 @@ This library is compatible with the standard Tezos RPC protocol.
 `npm i tezbridge-network`
 
 ## Requirements
-1. `parcel-bundler` is needed. (`npm install -g parcel-bundler`)
+- `parcel-bundler` is needed. (`npm install -g parcel-bundler`)
 
 ## Building
 ```
