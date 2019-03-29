@@ -100,7 +100,7 @@ export class TezBridgeNetwork {
     this.mixed = new APIs[protocol].Mixed(this.fetch, this.submit)
   }
 
-  modProtocol(protocol : string) {
+  switchProtocol(protocol : string) {
     if (!(protocol in APIs)) {
       throw `Protocol:${protocol} doesn't exist in protocols`
     }
