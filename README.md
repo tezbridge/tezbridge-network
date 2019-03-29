@@ -24,7 +24,11 @@ npm run build
 
 # Documentation
 
-## Create network client instance
+## Network client instance
+
+### network_client
+
+##### create instance
 ```javascript
 import TezBridgeNetwork from 'tezbridge-network'
 const network_client = new TezBridgeNetwork({
@@ -34,6 +38,11 @@ const network_client = new TezBridgeNetwork({
 ```
 
 ## API reference
+
+### network_client
+
+##### `network_client.switchProtocol(protocol)`
+Switch protocol on the fly
 
 ### network_client.fetch
 
