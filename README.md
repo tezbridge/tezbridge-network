@@ -73,7 +73,7 @@ Get the contract information of the padding address
 ##### `network_client.fetch.contract_bytes(hash_url, sub_path?)`
 Get the contract raw bytes of the passing hash_url
 
-**hash_url**: a special representation of contract hash. (eg: `3e/e2/31/36/6b/1336eb61419df8fc666056025929bf`)
+**hash_url**: a special hex representation of contract hash. (eg: `3e/e2/31/36/6b/1336eb61419df8fc666056025929bf`)
 You can generate such hash with the npm package `tezbridge-crypto`.
 
 ##### `network_client.fetch.storage_bytes(hash_url)`
