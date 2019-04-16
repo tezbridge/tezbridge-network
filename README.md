@@ -127,8 +127,7 @@ param: {
 }
 
 op_params: Array<{
-  kind : 'origination' | 'transaction',
-  destination? : string,
+  kind : 'reveal' | 'origination' | 'transaction',
   ...any
 }>
 ```
