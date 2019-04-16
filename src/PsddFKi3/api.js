@@ -147,10 +147,10 @@ export class Mixed {
     source : string,
     public_key: string
   }, op_params: Array<{
-    kind : 'origination' | 'transaction',
+    kind : 'reveal' | 'origination' | 'transaction',
     destination? : string
   }>) {
-    const ops = []
+    const ops : Array<TezJSON> = []
     const counter_prev = await this.fetch.counter(param.source)
     const manager_key = await this.fetch.manager_key(param.source)
 
@@ -160,7 +160,13 @@ export class Mixed {
     let counter = parseInt(counter_prev) + 1 + ''
 
     if (!safeProp(manager_key, 'key')) {
-      ops.push(Mixed.params.reveal(param.source, param.public_key, counter))
+      const reveal = Mixed.params.reveal(param.source, param.public_key, counter)
+
+      if (op_params.length && op_params[0].kind === 'reveal')
+        ops.push(Object.assign({}, reveal, op_params.shift()))
+      else
+        ops.push(reveal)
+
       counter = parseInt(counter) + 1 + ''
     }
 
@@ -170,6 +176,7 @@ export class Mixed {
 
     op_params.forEach(item => {
       const op = {
+        reveal: null,
         origination: Object.assign(
           {},
           Mixed.params.origination(param.source, manager_pkh, counter),
