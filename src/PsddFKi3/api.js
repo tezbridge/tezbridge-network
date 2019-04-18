@@ -30,7 +30,7 @@ export class Gets {
     return this.header().then(x => safeProp(x, 'predecessor'))
   }
   balance(address : string) {
-    return this.fetch(`/chains/main/blocks/head/context/delegates/${address}/balance`)
+    return this.fetch(`/chains/main/blocks/head/context/contracts/${address}/balance`)
   }
   contract(address : string) {
     return this.fetch(`/chains/main/blocks/head/context/contracts/${address}`)
