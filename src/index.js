@@ -31,7 +31,7 @@ const RPCFn = (() => {
           port: parsed_url.port,
           path: parsed_url.path,
           method,
-          headers: {
+          headers: raw_url.indexOf('tzscan.io/v3') > -1 ? {} : {
             'Content-Type': 'application/json'
           }
         }
@@ -66,6 +66,7 @@ const RPCFn = (() => {
 })()
 
 import PsddFKi3_API from './PsddFKi3/api'
+import { External } from './external'
 import type { RPCFunc, TezJSON } from './types'
 
 const APIs = {
@@ -75,9 +76,11 @@ const APIs = {
 export class TezBridgeNetwork {
   host: string
   RPCFn: RPCFunc
+  net_type: 'mainnet' | 'alphanet'
   fetch: PsddFKi3_API.Gets
   submit: PsddFKi3_API.Posts
   mixed: PsddFKi3_API.Mixed
+  external: External
 
   constructor(params : {
     host: string, 
@@ -88,6 +91,7 @@ export class TezBridgeNetwork {
 
     this.host = params.host
     this.RPCFn = RPCFn
+    this.net_type = this.host.indexOf('alphanet') > -1 ? 'alphanet' : 'mainnet'
 
     const protocol = params.protocol || 'PsddFKi3'
 
@@ -98,6 +102,7 @@ export class TezBridgeNetwork {
     this.fetch = new APIs[protocol].Gets((url, data) => this.get.call(this, url, data))
     this.submit = new APIs[protocol].Posts((url, data) => this.post.call(this, url, data))
     this.mixed = new APIs[protocol].Mixed(this.fetch, this.submit)
+    this.external = new External((url, data) => this.RPCFn(url, data, 'GET'), this.net_type)
   }
 
   switchProtocol(protocol : string) {

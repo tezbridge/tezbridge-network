@@ -6,7 +6,7 @@ import { filterHashUrl } from './../src/util'
 import { assert } from './util'
 
 const network_client = new TezBridgeNetwork({
-  host: 'https://testnet.tezbridge.com'
+  host: 'https://alphanet.tezrpc.me'    // thanks to Stephen Andrews
 })
 
 const fn_tests = async () => {
@@ -152,11 +152,20 @@ const mixed_tests = async () => {
   }
 }
 
+const external_tests = async () => {
+  const r = await network_client.external.spendable_contracts('tz1TJCwoX79reCZ8yccPeW8iB9Mba91v8H47')
+}
+
 const main = async () => {
-  await fn_tests()
-  await gets_tests()
-  await posts_tests()
-  await mixed_tests()
+  try {
+    await fn_tests()
+    await external_tests()
+    await gets_tests()
+    await posts_tests()
+    await mixed_tests() 
+  } catch (e) {
+    console.log(e)
+  }
 }
 
 main()
