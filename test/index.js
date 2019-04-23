@@ -153,7 +153,8 @@ const mixed_tests = async () => {
 }
 
 const external_tests = async () => {
-  const r = await network_client.external.spendable_contracts('tz1TJCwoX79reCZ8yccPeW8iB9Mba91v8H47')
+  const r = await network_client.external.originated_contracts('tz1TJCwoX79reCZ8yccPeW8iB9Mba91v8H47', false)
+  assert(r.length > 0, 'External: originated_contracts')
 }
 
 const main = async () => {

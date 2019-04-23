@@ -19,14 +19,14 @@ export class External {
       throw 'The net type can only be mainnet or alphanet'
   }
 
-  async spendable_contracts(address : string) {
+  async originated_contracts(address : string, spendable : boolean = true) {
     const url = this.domain() + `/operations/${address}?type=Origination`
     const operations  = await this.fetch(url)
     const result = []
     if (operations instanceof Array) 
       operations.forEach(op => {
         op.type.operations.forEach(inner_op => {
-          if (inner_op.spendable)
+          if (inner_op.spendable === spendable)
             result.push(inner_op.tz1.tz)
         })
       })
