@@ -149,7 +149,7 @@ export class Mixed {
   }, op_params: Array<{
     kind : 'reveal' | 'origination' | 'transaction',
     destination? : string
-  }>) {
+  }>) : Promise<any> {
     const ops : Array<TezJSON> = []
     const counter_prev = await this.fetch.counter(param.source)
     const manager_key = await this.fetch.manager_key(param.source)
@@ -234,6 +234,133 @@ export class Mixed {
     }, [Object.assign({
       kind: 'transaction'
     }, op_param)])
+  }
+
+  async makeMinFeeOperation(TBC : any, source : string | null, secret_key : string, op_params : any) {
+    const key = TBC.crypto.getKeyFromSecretKey(secret_key)
+
+    op_params.forEach(op => {
+      delete op.fee
+      delete op.gas_limit
+      delete op.storage_limit
+    })
+
+    const op_bytes_result = await this.makeOperationBytes({
+      source: source || key.address,
+      public_key: key.getPublicKey()
+    }, op_params)
+
+    const ops = op_bytes_result.contents
+
+    const local_hex = TBC.localop.forgeOperation(op_bytes_result.contents, op_bytes_result.branch)
+    if (local_hex !== op_bytes_result.operation_hex) {
+      throw `Inconsistent forged bytes:\nLocal(${local_hex})\nRemote(${op_bytes_result.operation_hex})`
+    }
+
+    op_bytes_result.signature = TBC.crypto.signOperation(op_bytes_result.operation_hex, secret_key)
+    const preapplyed_result : any = await this.submit.preapply_operation(
+      op_bytes_result.branch, op_bytes_result.contents, op_bytes_result.protocol, op_bytes_result.signature)
+
+    if (!(preapplyed_result instanceof Array))
+      throw `Invalid preapplyed result: ${preapplyed_result}`
+
+    let gas_sum = 0
+    preapplyed_result[0].contents.forEach((content, index) => {
+      let gas_limit = 0
+      let storage_limit = 0
+
+      const result = content.metadata.operation_result
+      const internal_operation_results = content.metadata.internal_operation_results
+
+      if (internal_operation_results) {
+        internal_operation_results.forEach(op => {
+          if (op.result.errors)
+            throw `Internal operation errors:${JSON.stringify(op.result.errors, null, 2)}`
+
+          gas_limit += parseInt(op.result.consumed_gas)
+          if (op.result.paid_storage_size_diff)
+            storage_limit += parseInt(op.result.paid_storage_size_diff)
+          if (op.result.originated_contracts)
+            storage_limit += op.result.originated_contracts.length * 257
+        })
+      }
+
+      if (result.errors)
+        throw `Operation errors:${JSON.stringify(result.errors, null, 2)}` 
+
+      gas_limit += parseInt(result.consumed_gas)
+      if (result.paid_storage_size_diff)
+        storage_limit += parseInt(result.paid_storage_size_diff)
+      if (result.originated_contracts)
+        storage_limit += result.originated_contracts.length * 257
+
+      ops[index].gas_limit = gas_limit + ''
+      ops[index].storage_limit = storage_limit + ''
+      ops[index].fee = '0'
+
+      gas_sum += parseInt(gas_limit)
+    })
+
+    const op_with_sig = op_bytes_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(op_bytes_result.signature))
+    const fee = Math.ceil(100 + op_with_sig.length / 2 + 0.1 * gas_sum)
+
+    let fee_left = fee
+    ops.forEach(op => {
+      const consumption = fee_left <= 400000 ? fee_left : 400000
+      op.fee = consumption + ''
+      fee_left -= consumption
+    })
+    if (fee_left)
+      throw `Still need ${fee_left} fee to run the operation` 
+
+    const final_op_result = await this.makeOperationBytes({
+      source: key.address,
+      public_key: key.getPublicKey()
+    }, ops)
+
+    const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, final_op_result.branch)
+    if (final_local_hex !== final_op_result.operation_hex) {
+      throw `Inconsistent final forged bytes:\nLocal(${local_hex})\nRemote(${final_op_result.operation_hex})`
+    }
+
+    final_op_result.signature = TBC.crypto.signOperation(final_op_result.operation_hex, secret_key)
+    const final_op_with_sig = final_op_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(final_op_result.signature))
+    
+    const final_preapplied : any = await this.submit.preapply_operation(
+      final_op_result.branch, final_op_result.contents, final_op_result.protocol, final_op_result.signature)
+
+    if (!(final_preapplied instanceof Array))
+      throw `Invalid final preapplyed result: ${final_preapplied}`
+
+    const originated_contracts = []
+    final_preapplied[0].contents.forEach((content, index) => {
+      const result = content.metadata.operation_result
+      const internal_operation_results = content.metadata.internal_operation_results
+
+      if (internal_operation_results) {
+        internal_operation_results.forEach(op => {
+          if (op.result.errors)
+            throw `Final internal operation errors:${JSON.stringify(op.result.errors, null, 2)}` 
+
+          if (op.result.originated_contracts)
+            originated_contracts.push(op.result.originated_contracts)
+        })
+      }
+
+      if (result.errors)
+        throw `Final operation errors:${JSON.stringify(result.errors, null, 2)}` 
+
+      if (result.originated_contracts)
+        originated_contracts.push(result.originated_contracts)
+    })
+
+    return {
+      fee,
+      originated_contracts,
+      branch: final_op_result.branch,
+      operation_contents: final_op_result.contents,
+      operation_with_sig: final_op_with_sig
+    }
   }
 }
 
