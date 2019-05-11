@@ -140,6 +140,17 @@ export class Mixed {
         // "delegate"?: $Signature.Public_key_hash,
         // "script"?: $scripted.contracts
       }
+    },
+    delegation(source: string, baker : string, counter : string) {
+      return {
+        counter,
+        delegate: baker,
+        fee: "1420",
+        gas_limit: "10000",
+        kind: "delegation",
+        source,
+        storage_limit: "0"
+      }
     }
   }
 
@@ -147,8 +158,9 @@ export class Mixed {
     source : string,
     public_key: string
   }, op_params: Array<{
-    kind : 'reveal' | 'origination' | 'transaction',
-    destination? : string
+    kind : 'reveal' | 'origination' | 'transaction' | 'delegation',
+    destination? : string,
+    baker? : string
   }>) : Promise<any> {
     const ops : Array<TezJSON> = []
     const counter_prev = await this.fetch.counter(param.source)
@@ -186,6 +198,10 @@ export class Mixed {
           {},
           Mixed.params.transaction(param.source, item.destination || '', counter),
           item
+        ),
+        delegation: Object.assign(
+          {},
+          Mixed.params.delegation(param.source, item.baker || '', counter)  
         )
       }[item.kind]
 
