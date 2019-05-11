@@ -135,16 +135,16 @@ export class Mixed {
         storage_limit: '60000',
         managerPubkey: manager_key,
         balance: '0',
-        // "spendable"?: boolean,
-        // "delegatable"?: boolean,
+        spendable: true,
+        delegatable: true
         // "delegate"?: $Signature.Public_key_hash,
         // "script"?: $scripted.contracts
       }
     },
-    delegation(source: string, baker : string, counter : string) {
+    delegation(source: string, delegate : string, counter : string) {
       return {
         counter,
-        delegate: baker,
+        delegate,
         fee: "1420",
         gas_limit: "10000",
         kind: "delegation",
@@ -160,7 +160,7 @@ export class Mixed {
   }, op_params: Array<{
     kind : 'reveal' | 'origination' | 'transaction' | 'delegation',
     destination? : string,
-    baker? : string
+    delegate? : string
   }>) : Promise<any> {
     const ops : Array<TezJSON> = []
     const counter_prev = await this.fetch.counter(param.source)
@@ -201,7 +201,7 @@ export class Mixed {
         ),
         delegation: Object.assign(
           {},
-          Mixed.params.delegation(param.source, item.baker || '', counter)  
+          Mixed.params.delegation(param.source, item.delegate || '', counter)  
         )
       }[item.kind]
 
@@ -330,7 +330,7 @@ export class Mixed {
       throw `Still need ${fee_left} fee to run the operation` 
 
     const final_op_result = await this.makeOperationBytes({
-      source: key.address,
+      source: source || key.address,
       public_key: key.getPublicKey()
     }, ops)
 
