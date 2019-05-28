@@ -1,14 +1,12 @@
 {
   "name": "tezbridge-network",
-  "version": "1.0.21",
+  "version": "1.0.22",
   "description": "The TezBridge network library for Tezos blockchain in JavaScript with Flow type system",
-  "main": "dist/index.js",
-  "browser": "dist/browser.js",
+  "main": "main/index.js",
   "scripts": {
     "flow": "flow",
     "dev": "parcel watch src/index.js",
-    "test": "flow && parcel build test/index.js --target node -o test.js && node dist/test.js",
-    "build": "rm -rf dist && rm -rf .cache && flow && parcel build src/index.js --target node && NODE_ENV=browser parcel build src/index.js --target browser -o browser.js"
+    "test": "flow && parcel build test/index.js --target node -o test.js && node dist/test.js"
   },
   "repository": {
     "type": "git",
@@ -21,13 +19,13 @@
   },
   "homepage": "https://github.com/tezbridge/tezbridge-network",
   "devDependencies": {
-    "@babel/core": "^7.4.4",
-    "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "@babel/plugin-transform-flow-strip-types": "^7.1.6",
+    "@babel/core": "^7.4.5",
+    "@babel/plugin-proposal-class-properties": "^7.4.4",
+    "@babel/plugin-transform-flow-strip-types": "^7.4.4",
     "@babel/plugin-transform-runtime": "^7.4.4",
     "flow-bin": "^0.86.0"
   },
   "dependencies": {
-    "@babel/runtime": "^7.4.3"
+    "@babel/runtime": "^7.4.5"
   }
 }
