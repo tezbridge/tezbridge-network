@@ -90,6 +90,59 @@ export class Posts {
   }
 }
 
+export const defaultOpParams = {
+  reveal(source: string, public_key: string, counter: string) {
+    return {
+      kind: 'reveal',
+      source,
+      fee: '1300',
+      gas_limit: '10000',
+      storage_limit: '0',
+      public_key,
+      counter
+    }
+  },
+  transaction(source: string, destination: string, counter: string) {
+    return {
+      kind: 'transaction',
+      source,
+      fee: '400000',
+      gas_limit: '400000',
+      storage_limit: '60000',
+      amount: '0',
+      counter,
+      destination,
+      // parameters?: $micheline.michelson_v1.expression
+    }
+  },
+  origination(source: string, manager_key: string, counter: string) {
+    return {
+      kind: 'origination',
+      source,
+      fee: '400000',
+      counter,
+      gas_limit: '400000',
+      storage_limit: '60000',
+      managerPubkey: manager_key,
+      balance: '0',
+      spendable: true,
+      delegatable: true
+      // "delegate"?: $Signature.Public_key_hash,
+      // "script"?: $scripted.contracts
+    }
+  },
+  delegation(source: string, delegate : string, counter : string) {
+    return {
+      counter,
+      delegate,
+      fee: "1420",
+      gas_limit: "10000",
+      kind: "delegation",
+      source,
+      storage_limit: "0"
+    }
+  }
+}
 
 export class Mixed {
   fetch: Gets
@@ -98,60 +151,6 @@ export class Mixed {
   constructor(fetch: Gets, submit: Posts) {
     this.fetch = fetch
     this.submit = submit
-  }
-
-  static params = {
-    reveal(source: string, public_key: string, counter: string) {
-      return {
-        kind: 'reveal',
-        source,
-        fee: '1300',
-        gas_limit: '10000',
-        storage_limit: '0',
-        public_key,
-        counter
-      }
-    },
-    transaction(source: string, destination: string, counter: string) {
-      return {
-        kind: 'transaction',
-        source,
-        fee: '400000',
-        gas_limit: '400000',
-        storage_limit: '60000',
-        amount: '0',
-        counter,
-        destination,
-        // parameters?: $micheline.michelson_v1.expression
-      }
-    },
-    origination(source: string, manager_key: string, counter: string) {
-      return {
-        kind: 'origination',
-        source,
-        fee: '400000',
-        counter,
-        gas_limit: '400000',
-        storage_limit: '60000',
-        managerPubkey: manager_key,
-        balance: '0',
-        spendable: true,
-        delegatable: true
-        // "delegate"?: $Signature.Public_key_hash,
-        // "script"?: $scripted.contracts
-      }
-    },
-    delegation(source: string, delegate : string, counter : string) {
-      return {
-        counter,
-        delegate,
-        fee: "1420",
-        gas_limit: "10000",
-        kind: "delegation",
-        source,
-        storage_limit: "0"
-      }
-    }
   }
 
   async makeOperationBytes(param: {
@@ -172,7 +171,7 @@ export class Mixed {
     let counter = parseInt(counter_prev) + 1 + ''
 
     if (!safeProp(manager_key, 'key')) {
-      const reveal = Mixed.params.reveal(param.source, param.public_key, counter)
+      const reveal = defaultOpParams.reveal(param.source, param.public_key, counter)
 
       if (op_params.length && op_params[0].kind === 'reveal')
         ops.push(Object.assign({}, reveal, op_params.shift()))
@@ -191,17 +190,17 @@ export class Mixed {
         reveal: null,
         origination: Object.assign(
           {},
-          Mixed.params.origination(param.source, manager_pkh, counter),
+          defaultOpParams.origination(param.source, manager_pkh, counter),
           item
         ),
         transaction: Object.assign(
           {},
-          Mixed.params.transaction(param.source, item.destination || '', counter),
+          defaultOpParams.transaction(param.source, item.destination || '', counter),
           item
         ),
         delegation: Object.assign(
           {},
-          Mixed.params.delegation(param.source, item.delegate || '', counter)  
+          defaultOpParams.delegation(param.source, item.delegate || '', counter)  
         )
       }[item.kind]
 
