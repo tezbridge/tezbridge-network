@@ -1,5 +1,5 @@
 // @flow
-import type { GetRPCFunc, PostRPCFunc, TezJSON } from './types'
+import type { GetRPCFunc, PostRPCFunc, TezJSON } from '../types'
 
 export class External {
   fetch: GetRPCFunc

@@ -65,26 +65,21 @@ const RPCFn = (() => {
   }
 })()
 
-import PsddFKi3_API from './PsddFKi3/api'
+import Api from './api'
 import { External } from './external'
-import type { RPCFunc, TezJSON } from './types'
-
-const APIs = {
-  PsddFKi3: PsddFKi3_API
-}
+import type { RPCFunc, TezJSON } from '../types'
 
 export class TezBridgeNetwork {
   host: string
   RPCFn: RPCFunc
   net_type: 'mainnet' | 'alphanet'
-  fetch: PsddFKi3_API.Gets
-  submit: PsddFKi3_API.Posts
-  mixed: PsddFKi3_API.Mixed
+  fetch: Api.Gets
+  submit: Api.Posts
+  mixed: Api.Mixed
   external: External
 
   constructor(params : {
-    host: string, 
-    protocol?: string,
+    host: string
   }) {
     if (!params.host)
       throw "Please set the host parameter"
@@ -93,26 +88,10 @@ export class TezBridgeNetwork {
     this.RPCFn = RPCFn
     this.net_type = this.host.indexOf('alphanet') > -1 ? 'alphanet' : 'mainnet'
 
-    const protocol = params.protocol || 'PsddFKi3'
-
-    if (!(protocol in APIs)) {
-      throw `Protocol:${protocol} doesn't exist in protocols`
-    }
-
-    this.fetch = new APIs[protocol].Gets((url, data) => this.get.call(this, url, data))
-    this.submit = new APIs[protocol].Posts((url, data) => this.post.call(this, url, data))
-    this.mixed = new APIs[protocol].Mixed(this.fetch, this.submit)
+    this.fetch = new Api.Gets((url, data) => this.get.call(this, url, data))
+    this.submit = new Api.Posts((url, data) => this.post.call(this, url, data))
+    this.mixed = new Api.Mixed(this.fetch, this.submit)
     this.external = new External((url, data) => this.RPCFn(url, data, 'GET'), this.net_type)
-  }
-
-  switchProtocol(protocol : string) {
-    if (!(protocol in APIs)) {
-      throw `Protocol:${protocol} doesn't exist in protocols`
-    }
-    
-    this.fetch = new APIs[protocol].Gets((url, data) => this.get.call(this, url, data))
-    this.submit = new APIs[protocol].Posts((url, data) => this.post.call(this, url, data))
-    this.mixed = new APIs[protocol].Mixed(this.fetch, this.submit)
   }
 
   get(url: string, data?: TezJSON) {

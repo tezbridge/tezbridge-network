@@ -1,7 +1,7 @@
 // @flow
 
-import TezBridgeNetwork from './../src/index'
-import { filterHashUrl } from './../src/util'
+import TezBridgeNetwork from '../Pt24m4xi/index'
+import { filterHashUrl } from '../util'
 
 import { assert } from './util'
 

@@ -1,6 +1,6 @@
 // @flow
 
-import type { TezJSON } from './../src/types'
+import type { TezJSON } from '../types'
 import _assert from 'assert'
 
 export const assert = (v: any, m : string) => {
