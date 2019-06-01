@@ -90,7 +90,7 @@ export class Posts {
   }
 }
 
-export const defaultOpParams = {
+export const default_op_params : Object = {
   reveal(source: string, public_key: string, counter: string) {
     return {
       kind: 'reveal',
@@ -144,6 +144,10 @@ export const defaultOpParams = {
   }
 }
 
+export const op_processes = {
+  preProcess(_ : any) {}
+}
+
 export class Mixed {
   fetch: Gets
   submit: Posts
@@ -171,7 +175,7 @@ export class Mixed {
     let counter = parseInt(counter_prev) + 1 + ''
 
     if (!safeProp(manager_key, 'key')) {
-      const reveal = defaultOpParams.reveal(param.source, param.public_key, counter)
+      const reveal = default_op_params.reveal(param.source, param.public_key, counter)
 
       if (op_params.length && op_params[0].kind === 'reveal')
         ops.push(Object.assign({}, reveal, op_params.shift()))
@@ -190,23 +194,24 @@ export class Mixed {
         reveal: null,
         origination: Object.assign(
           {},
-          defaultOpParams.origination(param.source, manager_pkh, counter),
+          default_op_params.origination(param.source, manager_pkh, counter),
           item
         ),
         transaction: Object.assign(
           {},
-          defaultOpParams.transaction(param.source, item.destination || '', counter),
+          default_op_params.transaction(param.source, item.destination || '', counter),
           item
         ),
         delegation: Object.assign(
           {},
-          defaultOpParams.delegation(param.source, item.delegate || '', counter)  
+          default_op_params.delegation(param.source, item.delegate || '', counter)  
         )
       }[item.kind]
 
       if (!op)
         throw `Invalid t(${item.kind}) in makeOperationBytes`
 
+      op_processes.preProcess(op)
       ops.push(op)
       counter = parseInt(counter) + 1 + ''
     })
