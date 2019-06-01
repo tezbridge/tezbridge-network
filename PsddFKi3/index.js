@@ -14,10 +14,13 @@ const RPCFn = (() => {
         req.addEventListener('error', reject)
         req.addEventListener('abort', reject)
         req.open(method, url)
+        
         if (method === 'POST') {
           req.setRequestHeader('Content-Type', 'application/json')
+          req.send(JSON.stringify(data))
+        } else {
+          req.send()
         }
-        req.send(data instanceof Object ? JSON.stringify(data) : undefined)
       })
     }
   } else {
