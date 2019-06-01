@@ -17,7 +17,7 @@ const RPCFn = (() => {
         if (method === 'POST') {
           req.setRequestHeader('Content-Type', 'application/json')
         }
-        req.send(JSON.stringify(data))
+        req.send(data instanceof Object ? JSON.stringify(data) : undefined)
       })
     }
   } else {
