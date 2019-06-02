@@ -20,7 +20,6 @@ This library is compatible with the standard Tezos RPC protocol.
 ## Building
 ```
 npm install
-npm run build
 ```
 
 # Documentation
@@ -31,10 +30,10 @@ npm run build
 
 ##### create instance
 ```javascript
-import TezBridgeNetwork from 'tezbridge-network'
+import TezBridgeNetwork from 'tezbridge-network/Pt24m4xi'
+// import TezBridgeNetwork from 'tezbridge-network/PsddFKi3'
 const network_client = new TezBridgeNetwork({
-  host: 'https://testnet.tezbridge.com',
-  protocol: 'PsddFKi3'        // optional
+  host: 'https://mainnet-node.tzscan.io/'
 })
 ```
 
