@@ -17,10 +17,6 @@ This library is compatible with the standard Tezos RPC protocol.
 - `parcel-bundler` is needed. (`npm install -g parcel-bundler`)
 - When the library is built for brower usage, the node env should be set to `browser`(`NODE_ENV=browser`)
 
-## Building
-```
-npm install
-```
 
 # Documentation
 
