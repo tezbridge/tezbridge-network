@@ -31,7 +31,7 @@ This library is compatible with the standard Tezos RPC protocol.
 import TezBridgeNetwork from 'tezbridge-network/Pt24m4xi'
 // import TezBridgeNetwork from 'tezbridge-network/PsddFKi3'
 const network_client = new TezBridgeNetwork({
-  host: 'https://testnet.tezbridge.com'
+  host: 'https://alphanet-node.tzscan.io'
 })
 ```
 
