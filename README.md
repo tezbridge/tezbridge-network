@@ -17,11 +17,8 @@ This library is compatible with the standard Tezos RPC protocol.
 - `parcel-bundler` is needed. (`npm install -g parcel-bundler`)
 - When the library is built for brower usage, the node env should be set to `browser`(`NODE_ENV=browser`)
 
-## Building
-```
-npm install
-npm run build
-```
+## Test
+`npm run test`
 
 # Documentation
 
@@ -31,19 +28,15 @@ npm run build
 
 ##### create instance
 ```javascript
-import TezBridgeNetwork from 'tezbridge-network'
+import TezBridgeNetwork from 'tezbridge-network/Pt24m4xi'
 const network_client = new TezBridgeNetwork({
-  host: 'https://testnet.tezbridge.com',
-  protocol: 'PsddFKi3'        // optional
+  host: 'https://testnet.tezbridge.com'
 })
 ```
 
 ## API reference
 
 ### network_client
-
-##### `network_client.switchProtocol(protocol)`
-Switch protocol on the fly
 
 ### network_client.fetch
 
@@ -174,3 +167,25 @@ op_param: {
 }
 ```
 
+##### `network_client.mixed.makeMinFeeOperation(TBC, source, param, op_param)`
+
+Arguments types:
+```
+TBC: TezBridgeCrypto package object
+
+source: string | null
+
+secret_key: string
+
+op_param: {
+  fee?: string,
+  gas_limit?: string,
+  storage_limit?: string,
+  managerPubkey?: string,
+  balance?: string,
+  spendable?: boolean,
+  delegatable?: boolean,
+  delegate?: string,
+  script?: Micheline
+}
+```
