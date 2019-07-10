@@ -66,22 +66,22 @@ const gets_tests = async () => {
     const r : Object = await network_client.fetch.predecessor()
     assert(r.length === 51, 'FETCH: head.header.predecessor')
   }
-
-  {
-    const r : Object = await network_client.fetch.contract_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
-    assert(r.balance && r.data && r.used_bytes && r.len && r.manager, 'FETCH: raw contract in bytes')
-  }
-
-  {
-    const r : Object = await network_client.fetch.storage_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
-    const storage_len = parseInt(r.slice(0, 8), 16)
-    assert(r.length === 8 + storage_len * 2, 'FETCH: raw storage of contract in bytes')
-  }
-
-  {
-    const r : Object = await network_client.fetch.big_map_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
-    assert(Object.keys(r).reduce((acc, x) => acc && (x.length === 2 ? true : false), true), 'FETCH: raw big_map of contract in bytes')
-  }
+// 
+//   {
+//     const r : Object = await network_client.fetch.contract_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
+//     assert(r.balance && r.data && r.used_bytes && r.len && r.manager, 'FETCH: raw contract in bytes')
+//   }
+// 
+//   {
+//     const r : Object = await network_client.fetch.storage_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
+//     const storage_len = parseInt(r.slice(0, 8), 16)
+//     assert(r.length === 8 + storage_len * 2, 'FETCH: raw storage of contract in bytes')
+//   }
+// 
+//   {
+//     const r : Object = await network_client.fetch.big_map_bytes('21/52/38/ac/1c/e4ec73e3ddac63eb58816f9a581d16')
+//     assert(Object.keys(r).reduce((acc, x) => acc && (x.length === 2 ? true : false), true), 'FETCH: raw big_map of contract in bytes')
+//   }
 }
 
 const posts_tests = async () => {

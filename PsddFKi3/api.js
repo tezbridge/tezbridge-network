@@ -167,7 +167,7 @@ export class Mixed {
     kind : 'reveal' | 'origination' | 'transaction' | 'delegation',
     destination? : string,
     delegate? : string
-  }>) : Promise<any> {
+  }>, no_forge : boolean = false) : Promise<any> {
     const ops : Array<TezJSON> = []
     const counter_prev = await this.fetch.counter(param.source)
     const manager_key = await this.fetch.manager_key(param.source)
@@ -224,7 +224,7 @@ export class Mixed {
     if (!(typeof head_hash === 'string'))
       throw `Error type for head_hash result: ${head_hash.toString()}`
 
-    const operation_hex = await this.submit.forge_operation(head_hash, ops)
+    const operation_hex = no_forge ? '' : await this.submit.forge_operation(head_hash, ops)
     const protocol = await this.fetch.protocol()
 
     return {
@@ -259,9 +259,16 @@ export class Mixed {
     }, op_param)])
   }
 
-  async makeMinFeeOperation(TBC : any, source : string | null, secret_key : string, op_params : any) {
-    const key = TBC.crypto.getKeyFromSecretKey(secret_key)
+  async makeMinFeeOperationBase(TBC : any, 
+                                source : string, 
+                                pub_key : string, 
+                                sign_fn : string => Promise<string>,
+                                op_params : any,
+                                no_remote_forge : boolean = false,
+                                outside : {step:number} = {step: 0}) {
 
+    outside.step = 1
+    // operation bytes generated with max fee
     op_params.forEach(op => {
       delete op.fee
       delete op.gas_limit
@@ -269,18 +276,25 @@ export class Mixed {
     })
 
     const op_bytes_result = await this.makeOperationBytes({
-      source: source || key.address,
-      public_key: key.getPublicKey()
-    }, op_params)
+      source: source,
+      public_key: pub_key
+    }, op_params, no_remote_forge)
 
     const ops = op_bytes_result.contents
 
+    outside.step = 2
+    // remote / local bytes comparison
     const local_hex = TBC.localop.forgeOperation(op_bytes_result.contents, op_bytes_result.branch)
+    if (!op_bytes_result.operation_hex)
+      op_bytes_result.operation_hex = local_hex
     if (local_hex !== op_bytes_result.operation_hex) {
       throw `Inconsistent forged bytes:\nLocal(${local_hex})\nRemote(${op_bytes_result.operation_hex})`
     }
 
-    op_bytes_result.signature = TBC.crypto.signOperation(op_bytes_result.operation_hex, secret_key)
+    outside.step = 3
+    // preapply the max fee operation to get the cost fee
+    // also it will assign the cost fee to the items of `ops` 
+    op_bytes_result.signature = await sign_fn(op_bytes_result.operation_hex)
     const preapplyed_result : any = await this.submit.preapply_operation(
       op_bytes_result.branch, op_bytes_result.contents, op_bytes_result.protocol, op_bytes_result.signature)
 
@@ -336,17 +350,25 @@ export class Mixed {
     if (fee_left)
       throw `Still need ${fee_left} fee to run the operation` 
 
+    outside.step = 4
+    // operation bytes generated with exact fee
     const final_op_result = await this.makeOperationBytes({
-      source: source || key.address,
-      public_key: key.getPublicKey()
-    }, ops)
+      source: source,
+      public_key: pub_key
+    }, ops, no_remote_forge)
 
+    outside.step = 5
+    // remote / local bytes comparison
     const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, final_op_result.branch)
+    if (!final_op_result.operation_hex)
+      final_op_result.operation_hex = final_local_hex
     if (final_local_hex !== final_op_result.operation_hex) {
       throw `Inconsistent final forged bytes:\nLocal(${local_hex})\nRemote(${final_op_result.operation_hex})`
     }
 
-    final_op_result.signature = TBC.crypto.signOperation(final_op_result.operation_hex, secret_key)
+    outside.step = 6
+    // preapply the exact fee operation to get the originated contracts
+    final_op_result.signature = await sign_fn(final_op_result.operation_hex)
     const final_op_with_sig = final_op_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(final_op_result.signature))
     
     const final_preapplied : any = await this.submit.preapply_operation(
@@ -385,6 +407,27 @@ export class Mixed {
       operation_with_sig: final_op_with_sig
     }
   }
+
+  async makeMinFeeOperation(TBC : any, 
+                            source : string | null, 
+                            secret_key : string, 
+                            op_params : any,
+                            no_remote_forge : boolean = false,
+                            outside : {step:number} = {step: 0}) {
+
+    const key = TBC.crypto.getKeyFromSecretKey(secret_key)
+
+    return await this.makeMinFeeOperationBase(
+      TBC,
+      source || key.address,
+      key.getPublicKey(),
+      async (op_bytes) => TBC.crypto.signOperation(op_bytes, secret_key),
+      op_params,
+      no_remote_forge,
+      outside
+    )
+  }
+
 }
 
 export default { Gets, Posts, Mixed }
