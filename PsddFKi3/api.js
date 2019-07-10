@@ -4,6 +4,9 @@ import type { GetRPCFunc, PostRPCFunc, TezJSON } from '../types'
 import { safeProp } from '../types'
 import { checkProps, filterHashUrl, OpStep } from '../util'
 
+export const default_config = {
+  gas_limit: '400000'
+}
 
 export class Gets {
   fetch : GetRPCFunc
@@ -62,7 +65,7 @@ export class Posts {
   }
 
   pack_data(data_json : TezJSON, type_json : TezJSON) {
-    const param = {"data": data_json,"type":type_json, "gas": "400000"}
+    const param = {"data": data_json,"type":type_json, "gas": default_config.gas_limit}
     return this.submit(`/chains/main/blocks/head/helpers/scripts/pack_data`, param)
                .then(x => safeProp(x, 'packed'))
   }
@@ -106,8 +109,8 @@ export const default_op_params : Object = {
     return {
       kind: 'transaction',
       source,
-      fee: '400000',
-      gas_limit: '400000',
+      fee: default_config.gas_limit,
+      gas_limit: default_config.gas_limit,
       storage_limit: '60000',
       amount: '0',
       counter,
@@ -119,9 +122,9 @@ export const default_op_params : Object = {
     return {
       kind: 'origination',
       source,
-      fee: '400000',
+      fee: default_config.gas_limit,
       counter,
-      gas_limit: '400000',
+      gas_limit: default_config.gas_limit,
       storage_limit: '60000',
       managerPubkey: manager_key,
       balance: '0',
@@ -326,7 +329,7 @@ export class Mixed {
 
     let fee_left = fee
     ops.forEach(op => {
-      const consumption = fee_left <= 400000 ? fee_left : 400000
+      const consumption = fee_left <= +default_config.gas_limit ? fee_left : +default_config.gas_limit
       op.fee = consumption + ''
       fee_left -= consumption
     })
