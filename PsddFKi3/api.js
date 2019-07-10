@@ -319,6 +319,8 @@ export class Mixed {
             storage_limit += parseInt(op.result.paid_storage_size_diff)
           if (op.result.originated_contracts)
             storage_limit += op.result.originated_contracts.length * 257
+          if (op.result.allocated_destination_contract)
+            storage_limit += 257
         })
       }
 
@@ -330,6 +332,8 @@ export class Mixed {
         storage_limit += parseInt(result.paid_storage_size_diff)
       if (result.originated_contracts)
         storage_limit += result.originated_contracts.length * 257
+      if (result.allocated_destination_contract)
+        storage_limit += 257
 
       ops[index].gas_limit = gas_limit + ''
       ops[index].storage_limit = storage_limit + ''
