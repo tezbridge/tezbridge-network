@@ -292,9 +292,11 @@ export class Mixed {
     }
 
     outside.step = 3
+    op_bytes_result.signature = await sign_fn(op_bytes_result.operation_hex)
+
     // preapply the max fee operation to get the cost fee
     // also it will assign the cost fee to the items of `ops` 
-    op_bytes_result.signature = await sign_fn(op_bytes_result.operation_hex)
+    outside.step = 4
     const preapplyed_result : any = await this.submit.preapply_operation(
       op_bytes_result.branch, op_bytes_result.contents, op_bytes_result.protocol, op_bytes_result.signature)
 
@@ -354,14 +356,14 @@ export class Mixed {
     if (fee_left)
       throw `Still need ${fee_left} fee to run the operation` 
 
-    outside.step = 4
+    outside.step = 5
     // operation bytes generated with exact fee
     const final_op_result = await this.makeOperationBytes({
       source: source,
       public_key: pub_key
     }, ops, no_remote_forge)
 
-    outside.step = 5
+    outside.step = 6
     // remote / local bytes comparison
     const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, final_op_result.branch)
     if (!final_op_result.operation_hex)
@@ -370,9 +372,11 @@ export class Mixed {
       throw `Inconsistent final forged bytes:\nLocal(${local_hex})\nRemote(${final_op_result.operation_hex})`
     }
 
-    outside.step = 6
-    // preapply the exact fee operation to get the originated contracts
+    outside.step = 7
     final_op_result.signature = await sign_fn(final_op_result.operation_hex)
+
+    outside.step = 8
+    // preapply the exact fee operation to get the originated contracts
     const final_op_with_sig = final_op_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(final_op_result.signature))
     
     const final_preapplied : any = await this.submit.preapply_operation(
@@ -403,6 +407,8 @@ export class Mixed {
         originated_contracts.push(result.originated_contracts)
     })
 
+    outside.step = 9
+    
     return {
       fee,
       originated_contracts,
