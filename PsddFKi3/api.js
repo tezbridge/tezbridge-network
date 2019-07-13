@@ -78,6 +78,15 @@ export class Posts {
     return this.submit(`/chains/main/blocks/head/helpers/forge/operations`, param)
   }
 
+  run_operation(head_hash : string, ops : TezJSON) {
+    const param = {
+      branch: head_hash,
+      contents: ops,
+      signature: 'edsigu6FNEzqHPAbQAUjjKtcAFkiW4The5BQbCj53bCyV9st32aHrcZhqnzLWw74HiwMScMh1SiTgY8juYUAUsJ3JG2DvGeCFjd'
+    }
+    return this.submit(`/chains/main/blocks/head/helpers/scripts/run_operation`, param)
+  }
+
   preapply_operation(head_hash : string, ops : TezJSON, protocol : string, signature : string) {
     const param = {
       branch: head_hash,
@@ -291,20 +300,17 @@ export class Mixed {
       throw `Inconsistent forged bytes:\nLocal(${local_hex})\nRemote(${op_bytes_result.operation_hex})`
     }
 
-    outside.step = 3
-    op_bytes_result.signature = await sign_fn(op_bytes_result.operation_hex)
-
     // preapply the max fee operation to get the cost fee
     // also it will assign the cost fee to the items of `ops` 
-    outside.step = 4
-    const preapplyed_result : any = await this.submit.preapply_operation(
-      op_bytes_result.branch, op_bytes_result.contents, op_bytes_result.protocol, op_bytes_result.signature)
+    outside.step = 3
+    const run_operation_result : any = await this.submit.run_operation(
+      op_bytes_result.branch, op_bytes_result.contents)
 
-    if (!(preapplyed_result instanceof Array))
-      throw `Invalid preapplyed result: ${preapplyed_result}`
+    if (!(run_operation_result instanceof Array))
+      throw `Invalid run operation result: ${run_operation_result}`
 
     let gas_sum = 0
-    preapplyed_result[0].contents.forEach((content, index) => {
+    run_operation_result[0].contents.forEach((content, index) => {
       let gas_limit = 0
       let storage_limit = 0
 
@@ -356,14 +362,14 @@ export class Mixed {
     if (fee_left)
       throw `Still need ${fee_left} fee to run the operation` 
 
-    outside.step = 5
+    outside.step = 4
     // operation bytes generated with exact fee
     const final_op_result = await this.makeOperationBytes({
       source: source,
       public_key: pub_key
     }, ops, no_remote_forge)
 
-    outside.step = 6
+    outside.step = 5
     // remote / local bytes comparison
     const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, final_op_result.branch)
     if (!final_op_result.operation_hex)
@@ -372,10 +378,10 @@ export class Mixed {
       throw `Inconsistent final forged bytes:\nLocal(${local_hex})\nRemote(${final_op_result.operation_hex})`
     }
 
-    outside.step = 7
+    outside.step = 6
     final_op_result.signature = await sign_fn(final_op_result.operation_hex)
 
-    outside.step = 8
+    outside.step = 7
     // preapply the exact fee operation to get the originated contracts
     const final_op_with_sig = final_op_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(final_op_result.signature))
     
@@ -407,7 +413,7 @@ export class Mixed {
         originated_contracts.push(result.originated_contracts)
     })
 
-    outside.step = 9
+    outside.step = 8
     
     return {
       fee,
