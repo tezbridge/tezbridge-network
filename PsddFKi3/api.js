@@ -5,7 +5,8 @@ import { safeProp } from '../types'
 import { checkProps, filterHashUrl, OpStep } from '../util'
 
 export const default_config = {
-  gas_limit: '400000'
+  gas_limit: '400000',
+  fake_sig: 'edsigu6FNEzqHPAbQAUjjKtcAFkiW4The5BQbCj53bCyV9st32aHrcZhqnzLWw74HiwMScMh1SiTgY8juYUAUsJ3JG2DvGeCFjd'
 }
 
 export class Gets {
@@ -82,7 +83,7 @@ export class Posts {
     const param = {
       branch: head_hash,
       contents: ops,
-      signature: 'edsigu6FNEzqHPAbQAUjjKtcAFkiW4The5BQbCj53bCyV9st32aHrcZhqnzLWw74HiwMScMh1SiTgY8juYUAUsJ3JG2DvGeCFjd'
+      signature: default_config.fake_sig
     }
     return this.submit(`/chains/main/blocks/head/helpers/scripts/run_operation`, param)
   }
@@ -300,17 +301,14 @@ export class Mixed {
       throw `Inconsistent forged bytes:\nLocal(${local_hex})\nRemote(${op_bytes_result.operation_hex})`
     }
 
-    // preapply the max fee operation to get the cost fee
+    // run the max fee operation to get the cost fee
     // also it will assign the cost fee to the items of `ops` 
     outside.step = 3
     const run_operation_result : any = await this.submit.run_operation(
       op_bytes_result.branch, op_bytes_result.contents)
 
-    if (!(run_operation_result instanceof Array))
-      throw `Invalid run operation result: ${run_operation_result}`
-
     let gas_sum = 0
-    run_operation_result[0].contents.forEach((content, index) => {
+    run_operation_result.contents.forEach((content, index) => {
       let gas_limit = 0
       let storage_limit = 0
 
@@ -350,7 +348,7 @@ export class Mixed {
       gas_sum += parseInt(gas_limit)
     })
 
-    const op_with_sig = op_bytes_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(op_bytes_result.signature))
+    const op_with_sig = op_bytes_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(default_config.fake_sig))
     const fee = Math.ceil(100 + op_with_sig.length / 2 + 0.1 * gas_sum)
 
     let fee_left = fee
