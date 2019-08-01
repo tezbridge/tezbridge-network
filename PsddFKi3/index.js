@@ -1,7 +1,7 @@
 // @flow
 
 const RPCFn = (() => {
-  if (process.env.NODE_ENV === 'browser') {
+  if (process.env.BROWSER_OPT) {
     return (url, data, method) => {
       return new Promise<TezJSON>((resolve, reject) => {
         const req = new XMLHttpRequest()
