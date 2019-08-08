@@ -69,6 +69,7 @@ export class Posts {
     const param = {"data": data_json,"type":type_json, "gas": default_config.gas_limit}
     return this.submit(`/chains/main/blocks/head/helpers/scripts/pack_data`, param)
                .then(x => safeProp(x, 'packed'))
+               .catch(err => Promise.reject(err instanceof ProgressEvent ? 'Pack data failed' : err))
   }
 
   forge_operation(head_hash : string, ops : TezJSON) {
@@ -77,6 +78,8 @@ export class Posts {
       contents: ops
     }
     return this.submit(`/chains/main/blocks/head/helpers/forge/operations`, param)
+               .catch(err => Promise.reject(err instanceof ProgressEvent ? 'forge operation failed' : err))
+
   }
 
   run_operation(head_hash : string, ops : TezJSON) {
@@ -86,6 +89,7 @@ export class Posts {
       signature: default_config.fake_sig
     }
     return this.submit(`/chains/main/blocks/head/helpers/scripts/run_operation`, param)
+               .catch(err => Promise.reject(err instanceof ProgressEvent ? 'run operation failed' : err))
   }
 
   preapply_operation(head_hash : string, ops : TezJSON, protocol : string, signature : string) {
@@ -96,10 +100,12 @@ export class Posts {
       signature
     }
     return this.submit(`/chains/main/blocks/head/helpers/preapply/operations`, [param])
+               .catch(err => Promise.reject(err instanceof ProgressEvent ? 'preapply operation failed' : err))
   }
 
   inject_operation(signed_op : string) {
     return this.submit('/injection/operation', signed_op)
+               .catch(err => Promise.reject(err instanceof ProgressEvent ? 'inject operation failed' : err))
   }
 }
 
