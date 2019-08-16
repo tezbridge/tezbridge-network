@@ -135,7 +135,7 @@ export const default_op_params : Object = {
       // parameters?: $micheline.michelson_v1.expression
     }
   },
-  origination(source: string, manager_key: string, counter: string) {
+  origination(source: string, counter: string) {
     return {
       kind: 'origination',
       source,
@@ -143,10 +143,10 @@ export const default_op_params : Object = {
       counter,
       gas_limit: default_config.gas_limit,
       storage_limit: default_config.storage_limit,
-      manager_pubkey: manager_key,
+      // manager_pubkey: manager_key,
       balance: '0',
-      spendable: true,
-      delegatable: true
+      // spendable: true,
+      // delegatable: true
       // "delegate"?: $Signature.Public_key_hash,
       // "script"?: $scripted.contracts
     }
@@ -226,16 +226,12 @@ export class Mixed {
       counter = parseInt(counter) + 1 + ''
     }
 
-    const manager_pkh = safeProp(manager_key, 'manager')
-    if (typeof manager_pkh !== 'string')
-      throw 'Invalid manager public key hash'
-
     op_params.forEach(item => {
       const op = {
         reveal: null,
         origination: Object.assign(
           {},
-          default_op_params.origination(param.source, manager_pkh, counter),
+          default_op_params.origination(param.source, counter),
           item
         ),
         transaction: Object.assign(
