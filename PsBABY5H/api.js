@@ -83,11 +83,14 @@ export class Posts {
 
   }
 
-  run_operation(head_hash : string, ops : TezJSON) {
+  run_operation(head_hash : string, chain_id: string, ops : TezJSON) {
     const param = {
-      branch: head_hash,
-      contents: ops,
-      signature: default_config.fake_sig
+      operation: {
+        branch: head_hash,
+        contents: ops,
+        signature: default_config.fake_sig
+      },
+      chain_id
     }
     return this.submit(`/chains/main/blocks/head/helpers/scripts/run_operation`, param)
                .catch(err => Promise.reject(err instanceof ProgressEvent ? 'run operation failed' : err))
@@ -167,16 +170,18 @@ export const default_op_params : Object = {
 export const op_processes = {
   preProcess(op : Object) {
     if (op.kind === 'origination') {
-      if (op.script && op.spendable)
-        throw `You cannot originate spendable smart contract`
+      if (!op.script) {
+        op.script = {
+          code: [{"prim":"parameter","args":[{"prim":"or","args":[{"prim":"lambda","args":[{"prim":"unit"},{"prim":"list","args":[{"prim":"operation"}]}],"annots":["%do"]},{"prim":"unit","annots":["%default"]}]}]},{"prim":"storage","args":[{"prim":"key_hash"}]},{"prim":"code","args":[[[[{"prim":"DUP"},{"prim":"CAR"},{"prim":"DIP","args":[[{"prim":"CDR"}]]}]],{"prim":"IF_LEFT","args":[[{"prim":"PUSH","args":[{"prim":"mutez"},{"int":"0"}]},{"prim":"AMOUNT"},[[{"prim":"COMPARE"},{"prim":"EQ"}],{"prim":"IF","args":[[],[[{"prim":"UNIT"},{"prim":"FAILWITH"}]]]}],[{"prim":"DIP","args":[[{"prim":"DUP"}]]},{"prim":"SWAP"}],{"prim":"IMPLICIT_ACCOUNT"},{"prim":"ADDRESS"},{"prim":"SENDER"},[[{"prim":"COMPARE"},{"prim":"EQ"}],{"prim":"IF","args":[[],[[{"prim":"UNIT"},{"prim":"FAILWITH"}]]]}],{"prim":"UNIT"},{"prim":"EXEC"},{"prim":"PAIR"}],[{"prim":"DROP"},{"prim":"NIL","args":[{"prim":"operation"}]},{"prim":"PAIR"}]]}]]}],
+          storage: {string: op.source}
+        }
+      }
 
-      if (!op.script && !op.spendable)
-        throw `You cannot originate non-spendable account`
     } else if (op.kind === 'transaction') {
       if (!op.parameters) {
         op.parameters = {
           entrypoint: 'default',
-          value: {prim: 'Uint'}
+          value: {prim: 'Unit'}
         }
       } else if (!op.parameters.entrypoint) {
         const params = op.parameters
@@ -205,17 +210,17 @@ export class Mixed {
     kind : 'reveal' | 'origination' | 'transaction' | 'delegation',
     destination? : string,
     delegate? : string
-  }>, no_forge : boolean = false) : Promise<any> {
+  }>, no_forge : boolean = false, prev_fetched : Object = {}) : Promise<any> {
     const ops : Array<TezJSON> = []
-    const counter_prev = await this.fetch.counter(param.source)
-    const manager_key = await this.fetch.manager_key(param.source)
+    const counter_prev = prev_fetched.counter || await this.fetch.counter(param.source)
+    const manager_key = prev_fetched.manager_key || await this.fetch.manager_key(param.source)
 
     if (typeof counter_prev !== 'string')
       throw 'Invalid counter'
 
     let counter = parseInt(counter_prev) + 1 + ''
 
-    if (!safeProp(manager_key, 'key')) {
+    if (!manager_key) {
       const reveal = default_op_params.reveal(param.source, param.public_key, counter)
 
       if (op_params.length && op_params[0].kind === 'reveal')
@@ -253,18 +258,17 @@ export class Mixed {
       counter = parseInt(counter) + 1 + ''
     })
 
-    const head_hash = await this.fetch.hash()
+    const header : Object = prev_fetched.header || await this.fetch.header()
 
-    if (!(typeof head_hash === 'string'))
-      throw `Error type for head_hash result: ${head_hash.toString()}`
+    if (!(typeof header.hash === 'string'))
+      throw `Error type for head_hash result: ${header.hash.toString()}`
 
-    const operation_hex = no_forge ? '' : await this.submit.forge_operation(head_hash, ops)
-    const protocol = await this.fetch.protocol()
+    const operation_hex = no_forge ? '' : await this.submit.forge_operation(header.hash, ops)
 
     return {
-      protocol,
+      protocol: header.protocol,
       operation_hex,
-      branch: head_hash,
+      branch: header.hash,
       contents: ops
     }
   }
@@ -302,6 +306,13 @@ export class Mixed {
                                 outside : {step:number} = {step: 0}) {
 
     outside.step = 1
+
+    const counter = await this.fetch.counter(source)
+    const manager_key = await this.fetch.manager_key(source)
+    const header : Object = await this.fetch.header()
+
+    const prefetched = {counter, manager_key, header}
+
     // operation bytes generated with max fee
     op_params.forEach(op => {
       delete op.fee
@@ -312,13 +323,13 @@ export class Mixed {
     const op_bytes_result = await this.makeOperationBytes({
       source: source,
       public_key: pub_key
-    }, op_params, no_remote_forge)
+    }, op_params, no_remote_forge, prefetched)
 
     const ops = op_bytes_result.contents
 
     outside.step = 2
     // remote / local bytes comparison
-    const local_hex = TBC.localop.forgeOperation(op_bytes_result.contents, op_bytes_result.branch)
+    const local_hex = TBC.localop.forgeOperation(op_bytes_result.contents, header.hash)
     if (!op_bytes_result.operation_hex)
       op_bytes_result.operation_hex = local_hex
     if (local_hex !== op_bytes_result.operation_hex) {
@@ -329,7 +340,7 @@ export class Mixed {
     // also it will assign the cost fee to the items of `ops` 
     outside.step = 3
     const run_operation_result : any = await this.submit.run_operation(
-      op_bytes_result.branch, op_bytes_result.contents)
+      header.hash, header.chain_id, op_bytes_result.contents)
 
     let gas_sum = 0
     run_operation_result.contents.forEach((content, index) => {
@@ -389,11 +400,11 @@ export class Mixed {
     const final_op_result = await this.makeOperationBytes({
       source: source,
       public_key: pub_key
-    }, ops, no_remote_forge)
+    }, ops, no_remote_forge, prefetched)
 
     outside.step = 5
     // remote / local bytes comparison
-    const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, final_op_result.branch)
+    const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, header.hash)
     if (!final_op_result.operation_hex)
       final_op_result.operation_hex = final_local_hex
     if (final_local_hex !== final_op_result.operation_hex) {
@@ -408,7 +419,7 @@ export class Mixed {
     const final_op_with_sig = final_op_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(final_op_result.signature))
     
     const final_preapplied : any = await this.submit.preapply_operation(
-      final_op_result.branch, final_op_result.contents, final_op_result.protocol, final_op_result.signature)
+      header.hash, final_op_result.contents, header.protocol, final_op_result.signature)
 
     if (!(final_preapplied instanceof Array))
       throw `Invalid final preapplyed result: ${final_preapplied}`
@@ -440,7 +451,7 @@ export class Mixed {
     return {
       fee,
       originated_contracts,
-      branch: final_op_result.branch,
+      branch: header.hash,
       operation_contents: final_op_result.contents,
       operation_with_sig: final_op_with_sig
     }
