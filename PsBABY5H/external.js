@@ -15,6 +15,8 @@ export class External {
       return 'https://api1.tzscan.io/v3'
     else if (net_type === 'alphanet')
       return 'https://api.alphanet.tzscan.io/v3'
+    else if (net_type === 'zeronet')
+      return 'https://api.zeronet.tzscan.io/v3'
     else
       throw 'The net type can only be mainnet or alphanet'
   }
@@ -26,8 +28,7 @@ export class External {
     if (operations instanceof Array) 
       operations.forEach(op => {
         op.type.operations.forEach(inner_op => {
-          if (inner_op.spendable === spendable)
-            result.push(inner_op.tz1.tz)
+          result.push(inner_op.tz1.tz)
         })
       })
     else
