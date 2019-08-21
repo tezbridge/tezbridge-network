@@ -1,6 +1,6 @@
 {
   "name": "tezbridge-network",
-  "version": "1.0.37",
+  "version": "1.0.38",
   "description": "The TezBridge network library for Tezos blockchain in JavaScript with Flow type system",
   "main": "Pt24m4xi/index.js",
   "scripts": {
@@ -12,7 +12,7 @@
     "url": "git+https://github.com/tezbridge/tezbridge-network.git"
   },
   "author": "catsigma",
-  "license": "ISC",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/tezbridge/tezbridge-network/issues"
   },
