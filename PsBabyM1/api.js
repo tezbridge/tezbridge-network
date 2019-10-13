@@ -170,7 +170,7 @@ export const default_op_params : Object = {
 export const op_processes = {
   preProcess(op : Object) {
     if (op.source.indexOf('KT1') === 0)
-      throw `PsBABY5H does not support KT1 address to be the source`
+      throw `PsBabyM1 does not support KT1 address to be the source`
 
     if (op.kind === 'origination') {
       if (!op.script) {
