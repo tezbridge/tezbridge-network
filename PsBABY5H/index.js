@@ -34,7 +34,7 @@ const RPCFn = (() => {
           port: parsed_url.port,
           path: parsed_url.path,
           method,
-          headers: raw_url.indexOf('tzscan.io/v3') > -1 ? {} : {
+          headers: {
             'Content-Type': 'application/json'
           }
         }

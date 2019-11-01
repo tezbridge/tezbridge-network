@@ -12,23 +12,23 @@ export class External {
 
   domain(net_type : string) {
     if (net_type === 'mainnet')
-      return 'https://api1.tzscan.io/v3'
+      return 'https://api.tezos.id/mooncake/mainnet/v1'
     else if (net_type === 'alphanet')
-      return 'https://api.alphanet.tzscan.io/v3'
+      return 'https://api.tezos.id/mooncake/babylonnet/v1'
     else if (net_type === 'zeronet')
-      return 'https://api.zeronet.tzscan.io/v3'
+      return 'https://api.tezos.id/mooncake/zeronet/v1'
     else
       throw 'The net type can only be mainnet or alphanet'
   }
 
   async originated_contracts(address : string, spendable : boolean = true, net_type? : string) {
-    const url = this.domain(net_type || this.net_type) + `/operations/${address}?type=Origination`
+    const url = this.domain(net_type || this.net_type) + `originations?account=${address}`
     const operations  = await this.fetch(url)
     const result = []
     if (operations instanceof Array) 
       operations.forEach(op => {
-        op.type.operations.forEach(inner_op => {
-          result.push(inner_op.tz1.tz)
+        op.origination.operationResultOriginatedContracts.forEach(contract => {
+          result.push(contract)
         })
       })
     else

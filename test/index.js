@@ -6,7 +6,7 @@ import { filterHashUrl } from '../util'
 import { assert } from './util'
 
 const network_client = new TezBridgeNetwork({
-  host: 'https://alphanet-node.tzscan.io'
+  host: 'https://mainnet.tezrpc.me'
 })
 
 const fn_tests = async () => {
