@@ -22,7 +22,7 @@ export class External {
   }
 
   async originated_contracts(address : string, spendable : boolean = true, net_type? : string) {
-    const url = this.domain(net_type || this.net_type) + `originations?account=${address}`
+    const url = this.domain(net_type || this.net_type) + `/originations?account=${address}`
     const operations  = await this.fetch(url)
     const result = []
     if (operations instanceof Array) 
