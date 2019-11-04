@@ -316,11 +316,27 @@ export class Mixed {
 
     const prefetched = {counter, manager_key, header}
 
+    let restricted_fee = default_config.gas_limit
+    {
+      const balance = await this.fetch.balance(source)
+      const all_used = op_params.reduce((acc, op) => acc + parseInt(op.amount || op.balance || 0), 0)
+      const fee_left = parseInt(balance) - all_used
+      const [max_gas, max_storage] = [parseInt(default_config.gas_limit), parseInt(default_config.storage_limit)]
+      if (fee_left < (max_gas + max_storage) * op_params.length) {
+        restricted_fee = Math.floor(fee_left / op_params.length - max_storage).toString()
+      }
+    }
+    
     // operation bytes generated with max fee
     op_params.forEach(op => {
       delete op.fee
       delete op.gas_limit
       delete op.storage_limit
+      
+      if (restricted_fee !== default_config.gas_limit) {
+        op.fee = restricted_fee
+        op.gas_limit = restricted_fee
+      }
     })
 
     const op_bytes_result = await this.makeOperationBytes({
