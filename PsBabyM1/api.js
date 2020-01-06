@@ -320,8 +320,10 @@ export class Mixed {
       const all_used = op_params.reduce((acc, op) => acc + parseInt(op.amount || op.balance || 0), 0)
       const fee_left = parseInt(balance) - all_used
       const [max_gas, max_storage] = [parseInt(default_config.gas_limit), parseInt(default_config.storage_limit)]
-      if (fee_left < (max_gas + max_storage) * op_params.length) {
-        restricted_fee = Math.floor(fee_left / op_params.length - max_storage).toString()
+
+      if (fee_left / op_params.length > max_storage && 
+            fee_left < (max_gas + max_storage) * op_params.length) {
+          restricted_fee = Math.floor(fee_left / op_params.length - max_storage).toString()
       }
     }
     
@@ -431,7 +433,7 @@ export class Mixed {
     outside.step = 6
     const final_run_operation_result : any = await this.submit.run_operation(
       header.hash, header.chain_id, final_op_result.contents)
-      
+
     return {
       fee,
       operation_contents: final_run_operation_result.contents
@@ -460,8 +462,10 @@ export class Mixed {
       const all_used = op_params.reduce((acc, op) => acc + parseInt(op.amount || op.balance || 0), 0)
       const fee_left = parseInt(balance) - all_used
       const [max_gas, max_storage] = [parseInt(default_config.gas_limit), parseInt(default_config.storage_limit)]
-      if (fee_left < (max_gas + max_storage) * op_params.length) {
-        restricted_fee = Math.floor(fee_left / op_params.length - max_storage).toString()
+
+      if (fee_left / op_params.length > max_storage && 
+            fee_left < (max_gas + max_storage) * op_params.length) {
+          restricted_fee = Math.floor(fee_left / op_params.length - max_storage).toString()
       }
     }
     
