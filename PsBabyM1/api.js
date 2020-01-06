@@ -300,6 +300,144 @@ export class Mixed {
     }, op_param)])
   }
 
+  async testMinFeeOperation(TBC : any, 
+                            source : string, 
+                            pub_key : string, 
+                            op_params : any,
+                            no_remote_forge : boolean = false,
+                            outside : {step:number} = {step: 0}) {
+    outside.step = 1
+
+    const counter = await this.fetch.counter(source)
+    const manager_key = await this.fetch.manager_key(source)
+    const header : Object = await this.fetch.header()
+
+    const prefetched = {counter, manager_key, header}
+
+    let restricted_fee = default_config.gas_limit
+    {
+      const balance = await this.fetch.balance(source)
+      const all_used = op_params.reduce((acc, op) => acc + parseInt(op.amount || op.balance || 0), 0)
+      const fee_left = parseInt(balance) - all_used
+      const [max_gas, max_storage] = [parseInt(default_config.gas_limit), parseInt(default_config.storage_limit)]
+      if (fee_left < (max_gas + max_storage) * op_params.length) {
+        restricted_fee = Math.floor(fee_left / op_params.length - max_storage).toString()
+      }
+    }
+    
+    // operation bytes generated with max fee
+    op_params.forEach(op => {
+      delete op.fee
+      delete op.gas_limit
+      delete op.storage_limit
+      
+      if (restricted_fee !== default_config.gas_limit) {
+        op.fee = restricted_fee
+        op.gas_limit = restricted_fee
+      }
+    })
+
+    const op_bytes_result = await this.makeOperationBytes({
+      source: source,
+      public_key: pub_key
+    }, op_params, no_remote_forge, prefetched)
+
+    const ops = op_bytes_result.contents
+
+    outside.step = 2
+    // remote / local bytes comparison
+    const local_hex = TBC.localop.forgeOperation(op_bytes_result.contents, header.hash)
+    if (!op_bytes_result.operation_hex)
+      op_bytes_result.operation_hex = local_hex
+    if (local_hex !== op_bytes_result.operation_hex) {
+      throw `Inconsistent forged bytes:\nLocal(${local_hex})\nRemote(${op_bytes_result.operation_hex})`
+    }
+
+    // run the max fee operation to get the cost fee
+    // also it will assign the cost fee to the items of `ops` 
+    outside.step = 3
+    const run_operation_result : any = await this.submit.run_operation(
+      header.hash, header.chain_id, op_bytes_result.contents)
+
+    let gas_sum = 0
+    run_operation_result.contents.forEach((content, index) => {
+      let gas_limit = 0
+      let storage_limit = 0
+
+      const result = content.metadata.operation_result
+      const internal_operation_results = content.metadata.internal_operation_results
+
+      if (internal_operation_results) {
+        internal_operation_results.forEach(op => {
+          if (op.result.errors)
+            throw `Internal operation errors:${JSON.stringify(op.result.errors, null, 2)}`
+
+          gas_limit += parseInt(op.result.consumed_gas)
+          if (op.result.paid_storage_size_diff)
+            storage_limit += parseInt(op.result.paid_storage_size_diff)
+          if (op.result.originated_contracts)
+            storage_limit += op.result.originated_contracts.length * 257
+          if (op.result.allocated_destination_contract)
+            storage_limit += 257
+        })
+      }
+
+      if (result.errors)
+        throw `Operation errors:${JSON.stringify(result.errors, null, 2)}` 
+
+      gas_limit += parseInt(result.consumed_gas)
+      if (result.paid_storage_size_diff)
+        storage_limit += parseInt(result.paid_storage_size_diff)
+      if (result.originated_contracts)
+        storage_limit += result.originated_contracts.length * 257
+      if (result.allocated_destination_contract)
+        storage_limit += 257
+
+      ops[index].gas_limit = gas_limit + ''
+      ops[index].storage_limit = storage_limit + ''
+      ops[index].fee = '0'
+
+      gas_sum += parseInt(gas_limit)
+    })
+
+    const op_with_sig = op_bytes_result.operation_hex + TBC.codec.toHex(TBC.codec.bs58checkDecode(default_config.fake_sig))
+    const fee = Math.ceil(100 + op_with_sig.length / 2 + 0.1 * gas_sum)
+
+    let fee_left = fee
+    ops.forEach(op => {
+      const consumption = fee_left <= +default_config.gas_limit ? fee_left : +default_config.gas_limit
+      op.fee = consumption + ''
+      fee_left -= consumption
+    })
+    if (fee_left)
+      throw `Still need ${fee_left} fee to run the operation` 
+
+    outside.step = 4
+    // operation bytes generated with exact fee
+    const final_op_result = await this.makeOperationBytes({
+      source: source,
+      public_key: pub_key
+    }, ops, no_remote_forge, prefetched)
+
+    outside.step = 5
+    // remote / local bytes comparison
+    const final_local_hex = TBC.localop.forgeOperation(final_op_result.contents, header.hash)
+    if (!final_op_result.operation_hex)
+      final_op_result.operation_hex = final_local_hex
+    if (final_local_hex !== final_op_result.operation_hex) {
+      throw `Inconsistent final forged bytes:\nLocal(${local_hex})\nRemote(${final_op_result.operation_hex})`
+    }
+
+    outside.step = 6
+    const final_run_operation_result : any = await this.submit.run_operation(
+      header.hash, header.chain_id, final_op_result.contents)
+      
+    return {
+      fee,
+      operation_contents: final_run_operation_result.contents
+    }
+  }
+
   async makeMinFeeOperationBase(TBC : any, 
                                 source : string, 
                                 pub_key : string, 
