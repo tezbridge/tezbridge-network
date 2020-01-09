@@ -1,6 +1,6 @@
 {
   "name": "tezbridge-network",
-  "version": "1.0.45",
+  "version": "1.0.46",
   "description": "The TezBridge network library for Tezos blockchain in JavaScript with Flow type system",
   "main": "PsBABYM1/index.js",
   "scripts": {
