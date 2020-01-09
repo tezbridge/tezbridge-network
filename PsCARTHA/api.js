@@ -5,7 +5,7 @@ import { safeProp } from '../types'
 import { checkProps, filterHashUrl, OpStep } from '../util'
 
 export const default_config = {
-  gas_limit: '800000',
+  gas_limit: '1040000',
   storage_limit: '60000',
   fake_sig: 'edsigu6FNEzqHPAbQAUjjKtcAFkiW4The5BQbCj53bCyV9st32aHrcZhqnzLWw74HiwMScMh1SiTgY8juYUAUsJ3JG2DvGeCFjd'
 }
